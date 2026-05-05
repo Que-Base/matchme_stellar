@@ -24,7 +24,7 @@ MatchMe is a modern, visually rich social networking application built with Swif
 
 ## ⛓ Stellar Integration
 
-See [`STELLAR_ARCHITECTURE.md`](./STELLAR_ARCHITECTURE.md) for the full technical architecture.
+See [`STELLAR_ARCHITECTURE.md`](./STELLAR_ARCHITECTURE.md) for the full technical architecture and [`STELLAR_ROADMAP.md`](./STELLAR_ROADMAP.md) for the full feature roadmap.
 
 ### What's implemented
 
