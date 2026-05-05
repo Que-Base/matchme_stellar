@@ -54,11 +54,14 @@
 		08DC669F2C8BBCCD007AF7C2 /* FirebaseRemoteConfig in Frameworks */ = {isa = PBXBuildFile; productRef = 08DC669E2C8BBCCD007AF7C2 /* FirebaseRemoteConfig */; };
 		08DC66A12C8BBCCD007AF7C2 /* FirebaseStorage in Frameworks */ = {isa = PBXBuildFile; productRef = 08DC66A02C8BBCCD007AF7C2 /* FirebaseStorage */; };
 		08DC66A32C8BBCCD007AF7C2 /* FirebaseVertexAI-Preview in Frameworks */ = {isa = PBXBuildFile; productRef = 08DC66A22C8BBCCD007AF7C2 /* FirebaseVertexAI-Preview */; };
+		AA000003AA000003AA000003 /* stellarsdk in Frameworks */ = {isa = PBXBuildFile; productRef = AA000001AA000001AA000001 /* stellarsdk */; };
 		08EDA2842C7FD2C10057F3CA /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 08EDA2832C7FD2C10057F3CA /* OnboardingView.swift */; };
 		08EDA2892C7FF2750057F3CA /* cuddleColors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 08EDA2882C7FF2750057F3CA /* cuddleColors.swift */; };
 		08EDA28C2C7FFB4A0057F3CA /* dashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 08EDA28B2C7FFB4A0057F3CA /* dashboardView.swift */; };
 		08FBA6342C84B01A00E426D0 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 08FBA6332C84B01A00E426D0 /* GoogleService-Info.plist */; };
 		08FBA6382C84F89200E426D0 /* profilePhotosView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 08FBA6372C84F89100E426D0 /* profilePhotosView.swift */; };
+		AA000012AA000012AA000012 /* StellarWalletService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000010AA000010AA000010 /* StellarWalletService.swift */; };
+		AA000013AA000013AA000013 /* StellarWalletView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000011AA000011AA000011 /* StellarWalletView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -109,6 +112,8 @@
 		08EDA28B2C7FFB4A0057F3CA /* dashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = dashboardView.swift; sourceTree = "<group>"; };
 		08FBA6332C84B01A00E426D0 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		08FBA6372C84F89100E426D0 /* profilePhotosView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = profilePhotosView.swift; sourceTree = "<group>"; };
+		AA000010AA000010AA000010 /* StellarWalletService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StellarWalletService.swift; sourceTree = "<group>"; };
+		AA000011AA000011AA000011 /* StellarWalletView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StellarWalletView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -123,6 +128,7 @@
 				08DC669B2C8BBCCD007AF7C2 /* FirebaseFirestore in Frameworks */,
 				08DC669F2C8BBCCD007AF7C2 /* FirebaseRemoteConfig in Frameworks */,
 				08DC66A12C8BBCCD007AF7C2 /* FirebaseStorage in Frameworks */,
+				AA000003AA000003AA000003 /* stellarsdk in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -231,6 +237,7 @@
 			isa = PBXGroup;
 			children = (
 				08EDA28B2C7FFB4A0057F3CA /* dashboardView.swift */,
+				AA000011AA000011AA000011 /* StellarWalletView.swift */,
 				0801F6192C8A777F00A226F4 /* Onboarding_flow_view */,
 				0801F6162C8A73B700A226F4 /* reusable_views */,
 				08EDA2822C7FD2990057F3CA /* Auth_view */,
@@ -248,6 +255,7 @@
 			children = (
 				0801F6142C88EAD200A226F4 /* userModel.swift */,
 				08124AAB2C8CFF6A00BFBEB8 /* AuthViewModel.swift */,
+				AA000010AA000010AA000010 /* StellarWalletService.swift */,
 			);
 			path = models;
 			sourceTree = "<group>";
@@ -358,6 +366,7 @@
 				08DC669E2C8BBCCD007AF7C2 /* FirebaseRemoteConfig */,
 				08DC66A02C8BBCCD007AF7C2 /* FirebaseStorage */,
 				08DC66A22C8BBCCD007AF7C2 /* FirebaseVertexAI-Preview */,
+				AA000001AA000001AA000001 /* stellarsdk */,
 			);
 			productName = matchme.mobile_swift;
 			productReference = 08391D392C747FF100D66796 /* matchme.mobile_swift.app */;
@@ -390,6 +399,7 @@
 			packageReferences = (
 				086552402C822DA400FE47D2 /* XCRemoteSwiftPackageReference "SwiftfulRouting" */,
 				08DC66972C8BBCCD007AF7C2 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+				AA000002AA000002AA000002 /* XCRemoteSwiftPackageReference "stellar-ios-mac-sdk" */,
 			);
 			productRefGroup = 08391D3A2C747FF100D66796 /* Products */;
 			projectDirPath = "";
@@ -460,6 +470,8 @@
 				08FBA6382C84F89200E426D0 /* profilePhotosView.swift in Sources */,
 				08391D3D2C747FF100D66796 /* matchme_mobile_swiftApp.swift in Sources */,
 				086552492C8238F200FE47D2 /* likeView.swift in Sources */,
+				AA000012AA000012AA000012 /* StellarWalletService.swift in Sources */,
+				AA000013AA000013AA000013 /* StellarWalletView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -695,6 +707,14 @@
 				minimumVersion = 11.1.0;
 			};
 		};
+		AA000002AA000002AA000002 /* XCRemoteSwiftPackageReference "stellar-ios-mac-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/Soneso/stellar-ios-mac-sdk.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.5.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -732,6 +752,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 08DC66972C8BBCCD007AF7C2 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
 			productName = "FirebaseVertexAI-Preview";
+		};
+		AA000001AA000001AA000001 /* stellarsdk */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = AA000002AA000002AA000002 /* XCRemoteSwiftPackageReference "stellar-ios-mac-sdk" */;
+			productName = stellarsdk;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

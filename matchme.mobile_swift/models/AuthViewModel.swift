@@ -49,11 +49,19 @@ enum AuthState {
 
     func createUser(withEmail email: String, password: String, fullname: String) async throws {
         do {
-
             let result = try await Auth.auth().createUser(withEmail: email, password: password)
             self.userSession = result.user
 
-            let _user = User(id: result.user.uid, fullname: fullname, email: email)
+            // Generate Stellar keypair and fund on testnet
+            let stellarPublicKey: String?
+            if let kp = try? StellarWalletService.shared.getOrCreateKeypair() {
+                stellarPublicKey = kp.accountId
+                try? await StellarWalletService.shared.fundTestnetAccount(publicKey: kp.accountId)
+            } else {
+                stellarPublicKey = nil
+            }
+
+            let _user = User(id: result.user.uid, fullname: fullname, email: email, stellarPublicKey: stellarPublicKey)
 
             let encodedUser = try Firestore.Encoder().encode(_user)
 
