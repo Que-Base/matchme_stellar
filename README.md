@@ -1,6 +1,6 @@
 # MatchMe Stellar Mobile (Swift, Stellar)
 
-CuddleMe is a modern, visually rich social networking application built with SwiftUI. It features a seamless onboarding experience, profile management, discovery (Explore), and real-time interactions (Chats/Likes). The application follows a modern MVVM architecture and integrates with Firebase for authentication and backend services.
+MatchMe is a modern, visually rich social networking application built with SwiftUI. It features a seamless onboarding experience, profile management, discovery (Explore), and real-time interactions (Chats/Likes). The application follows a modern MVVM architecture and integrates with Firebase for authentication and backend services.
 
 ## 🚀 Features
 
@@ -23,9 +23,9 @@ CuddleMe is a modern, visually rich social networking application built with Swi
 ## 📁 Project Structure
 
 ```text
-cuddleme.mobile_swift/
+matchme.mobile_swift/
 ├── App/
-│   ├── cuddleme_mobile_swiftApp.swift  # Application Entry Point
+│   ├── matchme_mobile_swiftApp.swift  # Application Entry Point
 │   └── ContentView.swift               # Root View (Auth Logic)
 ├── Views/
 │   ├── Auth_view/                      # Authentication (SignUp, etc.)
@@ -57,16 +57,16 @@ cuddleme.mobile_swift/
 
 1. **Clone the repository**:
    ```bash
-   git clone https://github.com/your-username/cuddleme.mobile_swift.git
-   cd cuddleme.mobile_swift
+   git clone https://github.com/your-username/matchme.mobile_swift.git
+   cd matchme.mobile_swift
    ```
 
 2. **Open the project**:
-   Open `cuddleme.mobile_swift.xcodeproj` in Xcode.
+   Open `matchme.mobile_swift.xcodeproj` in Xcode.
 
 3. **Firebase Configuration**:
    - Download your `GoogleService-Info.plist` from the Firebase Console.
-   - Add the file to the `cuddleme.mobile_swift/` directory in Xcode, ensuring it's added to the app target.
+   - Add the file to the `matchme.mobile_swift/` directory in Xcode, ensuring it's added to the app target.
 
 4. **Dependencies**:
    Xcode will automatically resolve the Swift Package Manager (SPM) dependencies:
