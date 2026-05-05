@@ -24,5 +24,8 @@ Podfile.lock
 # Firebase credentials
 GoogleService-Info.plist
 
+# Session exports
+*-session.json
+
 # macOS
 .DS_Store
