@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MatchMe — Stellar-Powered Social App</title>
+  <style>
+    :root {
+      --grad-start: #a855f7;
+      --grad-end: #ec4899;
+      --bg: #0a0a0f;
+      --surface: #13131a;
+      --border: #1e1e2e;
+      --text: #f1f1f5;
+      --muted: #8b8ba0;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif;
+      line-height: 1.6;
+    }
+
+    /* ── NAV ── */
+    nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.25rem 2rem;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      background: rgba(10,10,15,0.85);
+      backdrop-filter: blur(12px);
+      z-index: 100;
+    }
+    .nav-logo {
+      font-size: 1.2rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--grad-start), var(--grad-end));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    nav a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.9rem;
+      margin-left: 1.5rem;
+      transition: color 0.2s;
+    }
+    nav a:hover { color: var(--text); }
+
+    /* ── HERO ── */
+    .hero {
+      text-align: center;
+      padding: 6rem 2rem 4rem;
+      max-width: 760px;
+      margin: 0 auto;
+    }
+    .badge {
+      display: inline-block;
+      padding: 0.3rem 0.9rem;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      font-size: 0.78rem;
+      color: var(--muted);
+      margin-bottom: 1.5rem;
+      letter-spacing: 0.04em;
+    }
+    .badge span {
+      background: linear-gradient(135deg, var(--grad-start), var(--grad-end));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      font-weight: 600;
+    }
+    h1 {
+      font-size: clamp(2.4rem, 6vw, 4rem);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+      margin-bottom: 1.25rem;
+    }
+    h1 .gradient {
+      background: linear-gradient(135deg, var(--grad-start), var(--grad-end));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .hero p {
+      font-size: 1.1rem;
+      color: var(--muted);
+      max-width: 560px;
+      margin: 0 auto 2.5rem;
+    }
+    .cta-group { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+    .btn {
+      padding: 0.75rem 1.75rem;
+      border-radius: 10px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition: opacity 0.2s, transform 0.15s;
+    }
+    .btn:hover { opacity: 0.85; transform: translateY(-1px); }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--grad-start), var(--grad-end));
+      color: #fff;
+    }
+    .btn-secondary {
+      background: var(--surface);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    /* ── SECTION ── */
+    section { padding: 5rem 2rem; max-width: 1100px; margin: 0 auto; }
+    .section-label {
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      background: linear-gradient(135deg, var(--grad-start), var(--grad-end));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 0.75rem;
+    }
+    h2 {
+      font-size: clamp(1.6rem, 4vw, 2.4rem);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 1rem;
+    }
+    .section-sub { color: var(--muted); max-width: 540px; margin-bottom: 3rem; }
+
+    /* ── FEATURE GRID ── */
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.25rem; }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.75rem;
+      transition: border-color 0.2s;
+    }
+    .card:hover { border-color: var(--grad-start); }
+    .card-icon { font-size: 1.8rem; margin-bottom: 1rem; }
+    .card h3 { font-size: 1rem; font-weight: 600; margin-bottom: 0.5rem; }
+    .card p { font-size: 0.88rem; color: var(--muted); }
+
+    /* ── STELLAR SECTION ── */
+    .stellar-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; }
+    .stellar-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+    }
+    .stellar-card .phase {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 0.5rem;
+    }
+    .stellar-card h3 { font-size: 0.95rem; font-weight: 600; margin-bottom: 0.5rem; }
+    .stellar-card p { font-size: 0.84rem; color: var(--muted); }
+    .tag {
+      display: inline-block;
+      padding: 0.2rem 0.6rem;
+      border-radius: 6px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      margin-top: 0.75rem;
+    }
+    .tag-done { background: rgba(34,197,94,0.15); color: #4ade80; }
+    .tag-soon { background: rgba(168,85,247,0.15); color: #c084fc; }
+
+    /* ── TECH STACK ── */
+    .stack-list { display: flex; flex-wrap: wrap; gap: 0.75rem; }
+    .stack-pill {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.5rem 1rem;
+      font-size: 0.85rem;
+      color: var(--text);
+    }
+
+    /* ── ROADMAP ── */
+    .roadmap { display: flex; flex-direction: column; gap: 0; }
+    .roadmap-item {
+      display: flex;
+      gap: 1.5rem;
+      padding-bottom: 2rem;
+      position: relative;
+    }
+    .roadmap-item:not(:last-child)::before {
+      content: '';
+      position: absolute;
+      left: 19px;
+      top: 40px;
+      bottom: 0;
+      width: 2px;
+      background: var(--border);
+    }
+    .roadmap-dot {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      flex-shrink: 0;
+      border: 2px solid var(--border);
+      background: var(--surface);
+      position: relative;
+      z-index: 1;
+    }
+    .roadmap-dot.done { border-color: #4ade80; background: rgba(34,197,94,0.1); }
+    .roadmap-dot.next { border-color: var(--grad-start); background: rgba(168,85,247,0.1); }
+    .roadmap-content h3 { font-size: 1rem; font-weight: 600; margin-bottom: 0.25rem; }
+    .roadmap-content p { font-size: 0.86rem; color: var(--muted); }
+
+    /* ── FOOTER ── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 2.5rem 2rem;
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+    footer a { color: var(--muted); text-decoration: none; }
+    footer a:hover { color: var(--text); }
+
+    .divider { border: none; border-top: 1px solid var(--border); }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav>
+    <span class="nav-logo">MatchMe ✦</span>
+    <div>
+      <a href="#features">Features</a>
+      <a href="#stellar">Stellar</a>
+      <a href="#roadmap">Roadmap</a>
+      <a href="https://github.com/Que-Base/matchme_stellar" target="_blank">GitHub</a>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="badge">Built on <span>Stellar Blockchain</span> · iOS · Swift</div>
+    <h1>Social connections,<br><span class="gradient">powered on-chain.</span></h1>
+    <p>MatchMe is a modern social networking app where every user owns a non-custodial Stellar wallet — enabling a real token economy, verifiable identity, and trustless interactions.</p>
+    <div class="cta-group">
+      <a class="btn btn-primary" href="https://github.com/Que-Base/matchme_stellar" target="_blank">View on GitHub</a>
+      <a class="btn btn-secondary" href="https://github.com/Que-Base/matchme_stellar/blob/main/STELLAR_ARCHITECTURE.md" target="_blank">Architecture Docs</a>
+    </div>
+  </div>
+
+  <hr class="divider" />
+
+  <!-- FEATURES -->
+  <section id="features">
+    <div class="section-label">Features</div>
+    <h2>Everything you need to connect.</h2>
+    <p class="section-sub">A full-featured social app with a blockchain layer that users actually own.</p>
+    <div class="grid">
+      <div class="card">
+        <div class="card-icon">🔐</div>
+        <h3>Non-Custodial Wallet</h3>
+        <p>Every user gets a Stellar Ed25519 keypair at signup. Secret seed lives in iOS Keychain — MatchMe never touches it.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">⚡</div>
+        <h3>Instant Payments</h3>
+        <p>Send XLM or MATCH tokens peer-to-peer in seconds. Stellar settles in 3–5s with near-zero fees (~$0.00001/tx).</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">🧭</div>
+        <h3>Discover & Explore</h3>
+        <p>Intuitive discovery interface to find and connect with other users, backed by Firebase Firestore.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">💬</div>
+        <h3>Real-Time Chat</h3>
+        <p>Dedicated messaging interface with likes feed and real-time interactions.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">🏅</div>
+        <h3>On-Chain Badges</h3>
+        <p>Achievement badges minted as Soroban NFTs. Owned by the user's Stellar account — portable forever.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">🛡</div>
+        <h3>Verified Dates</h3>
+        <p>Escrow smart contract where both users stake XLM before a date. Mutual confirmation returns stakes. No-shows forfeit.</p>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider" />
+
+  <!-- STELLAR -->
+  <section id="stellar">
+    <div class="section-label">Stellar Integration</div>
+    <h2>Blockchain that works for users.</h2>
+    <p class="section-sub">A phased integration from basic wallet infrastructure to a full on-chain economy.</p>
+    <div class="stellar-grid">
+      <div class="stellar-card">
+        <div class="phase">Phase 1</div>
+        <h3>Wallet & Identity</h3>
+        <p>Keypair generation, Keychain storage, Friendbot testnet funding, live XLM balance via Horizon.</p>
+        <span class="tag tag-done">✓ Complete</span>
+      </div>
+      <div class="stellar-card">
+        <div class="phase">Phase 2</div>
+        <h3>MATCH Token Economy</h3>
+        <p>Custom Stellar asset. Earn on likes and matches. Spend on super likes, tips, and profile boosts.</p>
+        <span class="tag tag-soon">Coming Soon</span>
+      </div>
+      <div class="stellar-card">
+        <div class="phase">Phase 3</div>
+        <h3>Soroban Smart Contracts</h3>
+        <p>On-chain subscriptions, date escrow, and NFT profile badges — all written in Rust on Soroban.</p>
+        <span class="tag tag-soon">Coming Soon</span>
+      </div>
+      <div class="stellar-card">
+        <div class="phase">Phase 4</div>
+        <h3>Mainnet & On-Ramp</h3>
+        <p>Switch to Stellar mainnet. MoneyGram Ramps integration for fiat → XLM. Apple IAP → MATCH.</p>
+        <span class="tag tag-soon">Planned</span>
+      </div>
+      <div class="stellar-card">
+        <div class="phase">Phase 5</div>
+        <h3>Decentralised Identity</h3>
+        <p>Profile attestations, SEP-10 Web Auth, and ZK proofs for privacy-preserving age/location verification.</p>
+        <span class="tag tag-soon">Planned</span>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider" />
+
+  <!-- TECH STACK -->
+  <section>
+    <div class="section-label">Tech Stack</div>
+    <h2>Built with modern tools.</h2>
+    <p class="section-sub">Swift-native from top to bottom, with a Stellar blockchain layer.</p>
+    <div class="stack-list">
+      <span class="stack-pill">Swift 5.10+</span>
+      <span class="stack-pill">SwiftUI</span>
+      <span class="stack-pill">@Observable MVVM</span>
+      <span class="stack-pill">SwiftfulRouting</span>
+      <span class="stack-pill">Firebase Auth</span>
+      <span class="stack-pill">Firestore</span>
+      <span class="stack-pill">Firebase Storage</span>
+      <span class="stack-pill">Stellar SDK (Soneso)</span>
+      <span class="stack-pill">Soroban (Rust)</span>
+      <span class="stack-pill">iOS Keychain</span>
+      <span class="stack-pill">Horizon API</span>
+    </div>
+  </section>
+
+  <hr class="divider" />
+
+  <!-- ROADMAP -->
+  <section id="roadmap">
+    <div class="section-label">Roadmap</div>
+    <h2>Where we're headed.</h2>
+    <p class="section-sub">A clear path from wallet infrastructure to a full decentralised social economy.</p>
+    <div class="roadmap">
+      <div class="roadmap-item">
+        <div class="roadmap-dot done">✓</div>
+        <div class="roadmap-content">
+          <h3>Phase 1 — Wallet & Identity</h3>
+          <p>Non-custodial Stellar wallet at signup. Keypair in Keychain. Testnet funding. Live balance display.</p>
+        </div>
+      </div>
+      <div class="roadmap-item">
+        <div class="roadmap-dot next">2</div>
+        <div class="roadmap-content">
+          <h3>Phase 2 — MATCH Token Economy</h3>
+          <p>Issue MATCH asset. Earn on engagement. Spend on super likes, tips, and boosts. P2P tipping.</p>
+        </div>
+      </div>
+      <div class="roadmap-item">
+        <div class="roadmap-dot next">3</div>
+        <div class="roadmap-content">
+          <h3>Phase 3 — Soroban Smart Contracts</h3>
+          <p>Subscription contract, Verified Date escrow, and NFT achievement badges on Soroban.</p>
+        </div>
+      </div>
+      <div class="roadmap-item">
+        <div class="roadmap-dot next">4</div>
+        <div class="roadmap-content">
+          <h3>Phase 4 — Mainnet & On-Ramp</h3>
+          <p>Stellar mainnet launch. MoneyGram Ramps. Apple IAP → MATCH. Wallet backup and recovery.</p>
+        </div>
+      </div>
+      <div class="roadmap-item">
+        <div class="roadmap-dot next">5</div>
+        <div class="roadmap-content">
+          <h3>Phase 5 — Decentralised Identity</h3>
+          <p>Verifiable credentials, SEP-10 Web Auth, ZK proofs for privacy-preserving verification.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <p>MatchMe · Built by <a href="https://github.com/Que-Base" target="_blank">Que-Base</a> · Powered by <a href="https://stellar.org" target="_blank">Stellar</a></p>
+    <p style="margin-top:0.5rem;">
+      <a href="https://github.com/Que-Base/matchme_stellar" target="_blank">GitHub</a> ·
+      <a href="https://github.com/Que-Base/matchme_stellar/blob/main/STELLAR_ARCHITECTURE.md" target="_blank">Architecture</a> ·
+      <a href="https://github.com/Que-Base/matchme_stellar/blob/main/STELLAR_ROADMAP.md" target="_blank">Roadmap</a>
+    </p>
+  </footer>
+
+</body>
+</html>
