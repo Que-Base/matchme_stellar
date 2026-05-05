@@ -1,4 +1,4 @@
-# CuddleMe Mobile (Swift, Stellar)
+# MatchMe Stellar Mobile (Swift, Stellar)
 
 CuddleMe is a modern, visually rich social networking application built with SwiftUI. It features a seamless onboarding experience, profile management, discovery (Explore), and real-time interactions (Chats/Likes). The application follows a modern MVVM architecture and integrates with Firebase for authentication and backend services.
 
