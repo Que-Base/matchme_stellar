@@ -22,24 +22,22 @@ enum AuthState {
 
     var authState: AuthState = .undifined
 
+    // Retain the listener handle so it is not immediately deallocated
+    private var authStateListenerHandle: AuthStateDidChangeListenerHandle?
+
     func startUp() {
-
-        self.userSession = Auth.auth().currentUser
-
-        Task {
-            await fetchUser()
-        }
+        listenToAuthStateChanges()
     }
 
-    //  Work on refining this function
     func listenToAuthStateChanges() {
-        _ = Auth.auth().addStateDidChangeListener { auth, user in
-            if self.userSession != nil {
-                self.authState = .authenticated
-
-                return
-            }
+        authStateListenerHandle = Auth.auth().addStateDidChangeListener { [self] _, user in
+            self.userSession = user
             self.authState = user != nil ? .authenticated : .notAuthenticated
+            if user != nil {
+                Task { await self.fetchUser() }
+            } else {
+                self.currentUser = nil
+            }
         }
     }
 
