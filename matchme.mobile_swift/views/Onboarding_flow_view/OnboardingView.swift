@@ -38,15 +38,17 @@ struct OnboardingView: View {
 								Text("Have an account already?")
 										.cuddleFont(size: 14)
 										.foregroundStyle(.grey76)
-								Button(
-										action: {},
-										label: {
-												Text("Log in")
-														.cuddleFont(size: 16, weight: .medium)
-														.foregroundStyle(appLinearGradient)
-														.underline()
+								Button {
+										router.showScreen(.push) { _ in
+												SignInView()
+														.navigationBarBackButtonHidden(true)
 										}
-								)
+								} label: {
+										Text("Log in")
+												.cuddleFont(size: 16, weight: .medium)
+												.foregroundStyle(appLinearGradient)
+												.underline()
+								}
 						}
 					
 						Spacer()

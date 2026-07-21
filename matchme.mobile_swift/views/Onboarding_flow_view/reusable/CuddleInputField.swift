@@ -11,25 +11,27 @@ struct CuddleInputField: View {
     @Binding var input: String
     var label: LocalizedStringKey
     var fieldSet: LocalizedStringKey
+    var isSecure: Bool = false
+
     var body: some View {
         VStack(alignment: .leading) {
             Text(label)
                 .cuddleFont(size: 12)
                 .foregroundStyle(.greyABAD)
 
-            TextField(fieldSet, text: $input)
-                .padding(.vertical, 12)
-                .padding(.leading, 14)
-                .textInputAutocapitalization(.words)
-                .autocorrectionDisabled(true)
-                .background(.greyABAD.opacity(0.2))
-                .clipShape(RoundedRectangle(cornerRadius: 8))
-                .onSubmit {
-                    if label == "" && fieldSet != "" {
-                        //            label = fieldSet
-                        //            on submit use the field value for submition
-                    }
+            Group {
+                if isSecure {
+                    SecureField(fieldSet, text: $input)
+                } else {
+                    TextField(fieldSet, text: $input)
+                        .textInputAutocapitalization(.words)
+                        .autocorrectionDisabled(true)
                 }
+            }
+            .padding(.vertical, 12)
+            .padding(.leading, 14)
+            .background(.greyABAD.opacity(0.2))
+            .clipShape(RoundedRectangle(cornerRadius: 8))
         }
     }
 }
