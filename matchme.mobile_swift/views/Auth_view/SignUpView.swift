@@ -29,9 +29,9 @@ struct SignUpView: View {
 
             CuddleInputField(input: $textEmail, label: "Email", fieldSet: "")
 
-            CuddleInputField(input: $textPassword, label: "Password", fieldSet: "")
+            CuddleInputField(input: $textPassword, label: "Password", fieldSet: "", isSecure: true)
 
-            CuddleInputField(input: $textConfirmPassword, label: "Confirm Password", fieldSet: "")
+            CuddleInputField(input: $textConfirmPassword, label: "Confirm Password", fieldSet: "", isSecure: true)
 
             Spacer()
           
