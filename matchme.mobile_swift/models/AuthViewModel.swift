@@ -82,8 +82,31 @@ enum AuthState {
 
     }
 
-    func deleteAccount() {
+    func deleteAccount() async throws {
+        guard let user = Auth.auth().currentUser else { return }
 
+        do {
+            // Delete Firestore user document first
+            try await Firestore
+                .firestore()
+                .collection("users")
+                .document(user.uid)
+                .delete()
+
+            // Delete the Firebase Auth account
+            try await user.delete()
+
+            // Clear Stellar keypair from Keychain
+            StellarWalletService.shared.clearKeypair()
+
+            // Reset local state
+            self.userSession = nil
+            self.currentUser = nil
+            self.authState = .notAuthenticated
+        } catch {
+            print("DEBUG: failed to delete account with error \(error.localizedDescription)")
+            throw error
+        }
     }
 
     func fetchUser() async {
