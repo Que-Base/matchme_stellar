@@ -8,20 +8,27 @@ struct ContentView: View {
     var body: some View {
         Group {
             RouterView { _ in
-                if authViewModel.currentUser != nil {
-                    DashboardView()
-                } else {
-                    switch authViewModel.authState {
-                    case .undifined:
-                        OnboardingView()
-                    case .authenticated:
+                switch authViewModel.authState {
+                case .undifined:
+                    // Auth state not yet resolved — show a neutral loading
+                    // screen while the Firebase listener fires on startup.
+                    ProgressView()
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .background(.white)
+                case .authenticated:
+                    if authViewModel.currentUser != nil {
                         DashboardView()
-                    case .notAuthenticated:
-                        SignUpView()
+                    } else {
+                        // Authenticated but user document still loading —
+                        // stay on the loading screen until fetchUser() fills it.
+                        ProgressView()
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                            .background(.white)
                     }
+                case .notAuthenticated:
+                    OnboardingView()
                 }
             }
-
         }
     }
 
