@@ -79,7 +79,14 @@ enum AuthState {
     }
 
     func signOut() {
-
+        do {
+            try Auth.auth().signOut()
+            self.userSession = nil
+            self.currentUser = nil
+            self.authState = .notAuthenticated
+        } catch {
+            print("DEBUG: failed to sign out with error \(error.localizedDescription)")
+        }
     }
 
     func deleteAccount() {
