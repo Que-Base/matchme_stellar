@@ -44,7 +44,15 @@ enum AuthState {
     }
 
     func signIn(withEmail email: String, password: String) async throws {
-
+        do {
+            let result = try await Auth.auth().signIn(withEmail: email, password: password)
+            self.userSession = result.user
+            self.authState = .authenticated
+            await fetchUser()
+        } catch {
+            print("DEBUG: failed to sign in with error \(error.localizedDescription)")
+            throw error
+        }
     }
 
     func createUser(withEmail email: String, password: String, fullname: String) async throws {
