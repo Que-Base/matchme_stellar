@@ -63,6 +63,15 @@ class StellarWalletService {
         }
     }
 
+    /// Removes the stored secret seed from Keychain. Called on account deletion.
+    func clearKeypair() {
+        let query: [CFString: Any] = [
+            kSecClass: kSecClassGenericPassword,
+            kSecAttrAccount: keychainSecretKey
+        ]
+        SecItemDelete(query as CFDictionary)
+    }
+
     private func loadSecretFromKeychain() -> String? {
         let query: [CFString: Any] = [
             kSecClass: kSecClassGenericPassword,
