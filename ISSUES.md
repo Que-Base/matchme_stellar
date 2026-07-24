@@ -38,7 +38,7 @@
 | Area | Open | In Progress | Pending | Closed |
 |---|---|---|---|---|
 | Authentication | 0 | 0 | 0 | 7 |
-| Core Views (Stubs) | 4 | 0 | 0 | 0 |
+| Core Views (Stubs) | 3 | 0 | 0 | 1 |
 | Profile | 4 | 0 | 0 | 0 |
 | Stellar — Phase 1 | 1 | 0 | 0 | 5 |
 | Stellar — Phase 2 | 5 | 0 | 0 | 0 |
@@ -48,7 +48,7 @@
 | Architecture | 4 | 0 | 0 | 0 |
 | UI / UX | 4 | 0 | 0 | 0 |
 | Tech Debt | 5 | 0 | 0 | 0 |
-| **Total** | **36** | **0** | **0** | **13** |
+| **Total** | **35** | **0** | **0** | **14** |
 
 ---
 
@@ -161,7 +161,7 @@ Firebase user creation, Stellar keypair generation, Friendbot funding, and Fires
 These are the four main tab views. All are navigation placeholders with no real content.
 
 ### ISS-008 · ExploreView is a placeholder
-**Status:** 🔴 OPEN  
+**Status:** 🟢 CLOSED — stub implemented in PR #50 (`fix/iss-008-explore-view-stubs`)  
 **Tags:** `[stub]` `[missing]` `[blocking]`  
 **File:** `views/Explore/exploreView.swift`
 
@@ -752,7 +752,7 @@ The file is named `cuddleProfileImage.swift` but contains `CuddleProfileInfoView
 | ISS-005 | Auth state listener never called | 🟢 CLOSED | `[bug]` `[firebase]` `[arch]` | Auth |
 | ISS-006 | Auth routing race condition | 🟢 CLOSED | `[bug]` `[arch]` `[ux]` | Auth |
 | ISS-007 | Firebase Auth + Stellar wallet at signup | 🟢 CLOSED | `[firebase]` `[stellar]` | Auth |
-| ISS-008 | ExploreView is a placeholder | 🔴 OPEN | `[stub]` `[missing]` `[blocking]` | Core Views |
+| ISS-008 | ExploreView is a placeholder | 🟢 CLOSED | `[stub]` `[missing]` `[blocking]` | Core Views |
 | ISS-009 | LikeView is a placeholder | 🔴 OPEN | `[stub]` `[missing]` | Core Views |
 | ISS-010 | ChatView is a placeholder | 🔴 OPEN | `[stub]` `[missing]` | Core Views |
 | ISS-011 | SettingsView is nearly empty | 🔴 OPEN | `[stub]` `[missing]` `[ux]` | Core Views |
