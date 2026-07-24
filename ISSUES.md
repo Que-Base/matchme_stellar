@@ -38,7 +38,7 @@
 | Area | Open | In Progress | Pending | Closed |
 |---|---|---|---|---|
 | Authentication | 0 | 0 | 0 | 7 |
-| Core Views (Stubs) | 3 | 0 | 0 | 1 |
+| Core Views (Stubs) | 2 | 0 | 0 | 2 |
 | Profile | 4 | 0 | 0 | 0 |
 | Stellar — Phase 1 | 1 | 0 | 0 | 5 |
 | Stellar — Phase 2 | 5 | 0 | 0 | 0 |
@@ -48,7 +48,7 @@
 | Architecture | 4 | 0 | 0 | 0 |
 | UI / UX | 4 | 0 | 0 | 0 |
 | Tech Debt | 5 | 0 | 0 | 0 |
-| **Total** | **35** | **0** | **0** | **14** |
+| **Total** | **34** | **0** | **0** | **15** |
 
 ---
 
@@ -180,7 +180,7 @@ The entire view body is `Text("Explore view")`. This is the app's primary discov
 ---
 
 ### ISS-009 · LikeView is a placeholder
-**Status:** 🔴 OPEN  
+**Status:** 🟢 CLOSED — stub implemented in PR #51 (`fix/iss-009-like-view-stubs`)  
 **Tags:** `[stub]` `[missing]`  
 **File:** `views/Likes/likeView.swift`
 
@@ -753,7 +753,7 @@ The file is named `cuddleProfileImage.swift` but contains `CuddleProfileInfoView
 | ISS-006 | Auth routing race condition | 🟢 CLOSED | `[bug]` `[arch]` `[ux]` | Auth |
 | ISS-007 | Firebase Auth + Stellar wallet at signup | 🟢 CLOSED | `[firebase]` `[stellar]` | Auth |
 | ISS-008 | ExploreView is a placeholder | 🟢 CLOSED | `[stub]` `[missing]` `[blocking]` | Core Views |
-| ISS-009 | LikeView is a placeholder | 🔴 OPEN | `[stub]` `[missing]` | Core Views |
+| ISS-009 | LikeView is a placeholder | 🟢 CLOSED | `[stub]` `[missing]` | Core Views |
 | ISS-010 | ChatView is a placeholder | 🔴 OPEN | `[stub]` `[missing]` | Core Views |
 | ISS-011 | SettingsView is nearly empty | 🔴 OPEN | `[stub]` `[missing]` `[ux]` | Core Views |
 | ISS-012 | ProfileView uses hardcoded mock data | 🔴 OPEN | `[bug]` `[arch]` `[firebase]` | Profile |
