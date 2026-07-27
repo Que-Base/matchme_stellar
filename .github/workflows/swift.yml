@@ -35,7 +35,7 @@ jobs:
           xcodebuild \
             -project matchme.mobile_swift.xcodeproj \
             -scheme matchme.mobile_swift \
-            -destination 'platform=iOS Simulator,name=iPhone 16,OS=latest' \
+            -destination 'generic/platform=iOS Simulator' \
             -clonedSourcePackagesDirPath .spm-cache \
             CODE_SIGNING_ALLOWED=NO \
             build
@@ -45,7 +45,7 @@ jobs:
           xcodebuild \
             -project matchme.mobile_swift.xcodeproj \
             -scheme matchme.mobile_swift \
-            -destination 'platform=iOS Simulator,name=iPhone 16,OS=latest' \
+            -destination 'generic/platform=iOS Simulator' \
             -clonedSourcePackagesDirPath .spm-cache \
             CODE_SIGNING_ALLOWED=NO \
             test \
