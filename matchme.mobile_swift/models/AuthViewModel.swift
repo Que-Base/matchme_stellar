@@ -19,8 +19,10 @@ enum AuthState {
 @Observable class AuthViewModel {
     var userSession: FirebaseAuth.User?
     var currentUser: User?
-
     var authState: AuthState = .undifined
+
+    /// ISS-036 — surface auth errors to the UI instead of only print()-ing them.
+    var errorMessage: String?
 
     // Retain the listener handle so it is not immediately deallocated
     private var authStateListenerHandle: AuthStateDidChangeListenerHandle?
@@ -48,6 +50,7 @@ enum AuthState {
             self.authState = .authenticated
             await fetchUser()
         } catch {
+            self.errorMessage = error.localizedDescription
             print("DEBUG: failed to sign in with error \(error.localizedDescription)")
             throw error
         }
@@ -80,7 +83,9 @@ enum AuthState {
             await fetchUser()
 
         } catch {
+            self.errorMessage = error.localizedDescription
             print("DEBUG: failed to create user with error \(error.localizedDescription)")
+            throw error
         }
     }
 
