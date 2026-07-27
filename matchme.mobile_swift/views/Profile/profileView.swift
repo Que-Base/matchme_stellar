@@ -12,12 +12,21 @@ struct ProfileView: View {
     @State private var activeTab1 = true
     @State private var cuddleProfileTab = "premium"
 
+    @Environment(AuthViewModel.self) private var authViewModel
+
     let cuddleFeature: [String] = ["Feature_1 name", "Feature_2 name"]
-  
-  private let userProfile = ProfileViewModel.jostevModel(
-    premiumAccount: true,
-    profileSetupComplition: 0.8
-  )
+
+    /// ISS-012a/b — build ProfileViewModel from the real signed-in user.
+    /// Falls back to the mock model if currentUser is nil (e.g. in previews).
+    private var userProfile: ProfileViewModel {
+        if let user = authViewModel.currentUser {
+            return ProfileViewModel(from: user)
+        }
+        return ProfileViewModel.jostevModel(
+            premiumAccount: false,
+            profileSetupComplition: 0.1
+        )
+    }
 
     var body: some View {
         RouterView { router in
