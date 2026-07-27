@@ -12,7 +12,7 @@ import SwiftUI
     var lastName: String
     var bio: String
     var occupation: String
-    var intersets: [String]
+    var interests: [String]   // was: intersets (ISS-047 typo fixed)
     var age: Int
     var isPremiumUser: Bool
     var profileSetupComplition: Double
@@ -23,7 +23,7 @@ import SwiftUI
         firstName: String,
         lastName: String,
         occupation: String,
-        intersets: [String],
+        interests: [String],
         age: Int,
         premiumAccount: Bool,
         profileSetupComplition: Double,
@@ -34,13 +34,31 @@ import SwiftUI
         self.firstName = firstName
         self.lastName = lastName
         self.occupation = occupation
-        self.intersets = intersets
+        self.interests = interests
         self.age = age
         self.isPremiumUser = premiumAccount
         self.profileSetupComplition = profileSetupComplition
         self.bio = bio
         self.images = images
         self.profileImage = profileImage
+    }
+
+    // ISS-012a/b — build a ProfileViewModel from a real Firebase User.
+    // Falls back to empty/placeholder values for any fields not yet set.
+    convenience init(from user: User) {
+        let parts = user.fullname.split(separator: " ", maxSplits: 1)
+        self.init(
+            firstName: parts.first.map(String.init) ?? user.fullname,
+            lastName: parts.dropFirst().first.map(String.init) ?? "",
+            occupation: user.occupation ?? "",
+            interests: user.interests ?? [],
+            age: user.age ?? 0,
+            premiumAccount: user.isPremiumUser ?? false,
+            profileSetupComplition: user.profileSetupCompletion ?? 0.1,
+            bio: user.bio ?? "",
+            images: user.photoURLs ?? [],
+            profileImage: user.photoURLs?.first ?? ""
+        )
     }
 
 }
@@ -50,7 +68,7 @@ extension ProfileViewModel {
         firstName: String? = nil,
         lastName: String? = nil,
         occupation: String? = nil,
-        intersets: [String]? = nil,
+        interests: [String]? = nil,
         age: Int? = nil,
         premiumAccount: Bool,
         profileSetupComplition: Double,
@@ -62,7 +80,7 @@ extension ProfileViewModel {
             firstName: firstName ?? "Josteve",
             lastName: lastName ?? "Amshatir",
             occupation: occupation ?? "Product Designer",
-            intersets: intersets ?? ["Hiking"],
+            interests: interests ?? ["Hiking"],
             age: age ?? 28,
             premiumAccount: premiumAccount,
             profileSetupComplition: profileSetupComplition,
@@ -77,7 +95,7 @@ extension ProfileViewModel {
             firstName: "",
             lastName: "",
             occupation: "",
-            intersets: [""],
+            interests: [""],
             age: 0,
             premiumAccount: false,
             profileSetupComplition: 0.1,

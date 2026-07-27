@@ -30,9 +30,10 @@ struct CuddleProfileInfoView: View {
                     .padding(.bottom, 12)
 
               if profile.profileSetupComplition < 1.0 {
-                    Button(action: {
-
-                    }) {
+                    // ISS-015: wired to ProfileSetupView
+                    NavigationLink {
+                        ProfileSetupView()
+                    } label: {
                         Text("Complete my profile")
                             .cuddleFont(size: 10, weight: .medium)
                             .foregroundStyle(.black)
