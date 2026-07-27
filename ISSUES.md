@@ -38,7 +38,7 @@
 | Area | Open | In Progress | Pending | Closed |
 |---|---|---|---|---|
 | Authentication | 0 | 0 | 0 | 7 |
-| Core Views (Stubs) | 1 | 0 | 0 | 3 |
+| Core Views (Stubs) | 0 | 0 | 0 | 4 |
 | Profile | 4 | 0 | 0 | 0 |
 | Stellar — Phase 1 | 1 | 0 | 0 | 5 |
 | Stellar — Phase 2 | 5 | 0 | 0 | 0 |
@@ -48,7 +48,7 @@
 | Architecture | 4 | 0 | 0 | 0 |
 | UI / UX | 4 | 0 | 0 | 0 |
 | Tech Debt | 5 | 0 | 0 | 0 |
-| **Total** | **33** | **0** | **0** | **16** |
+| **Total** | **32** | **0** | **0** | **17** |
 
 ---
 
@@ -216,7 +216,7 @@ The view body is `Text("Chat View")` with a navigation title. No messaging funct
 ---
 
 ### ISS-011 · SettingsView is nearly empty
-**Status:** 🔴 OPEN  
+**Status:** 🟢 CLOSED — stub implemented in PR #53 (`fix/iss-011-settings-view-stubs`)  
 **Tags:** `[stub]` `[missing]` `[ux]`  
 **File:** `views/Settings/settingsView.swift`
 
@@ -755,7 +755,7 @@ The file is named `cuddleProfileImage.swift` but contains `CuddleProfileInfoView
 | ISS-008 | ExploreView is a placeholder | 🟢 CLOSED | `[stub]` `[missing]` `[blocking]` | Core Views |
 | ISS-009 | LikeView is a placeholder | 🟢 CLOSED | `[stub]` `[missing]` | Core Views |
 | ISS-010 | ChatView is a placeholder | 🟢 CLOSED | `[stub]` `[missing]` | Core Views |
-| ISS-011 | SettingsView is nearly empty | 🔴 OPEN | `[stub]` `[missing]` `[ux]` | Core Views |
+| ISS-011 | SettingsView is nearly empty | 🟢 CLOSED | `[stub]` `[missing]` `[ux]` | Core Views |
 | ISS-012 | ProfileView uses hardcoded mock data | 🔴 OPEN | `[bug]` `[arch]` `[firebase]` | Profile |
 | ISS-013 | Profile photos are mocked, no upload | 🔴 OPEN | `[stub]` `[missing]` `[firebase]` | Profile |
 | ISS-014 | Profile setup disconnected from auth flow | 🔴 OPEN | `[arch]` `[ux]` `[stub]` | Profile |
