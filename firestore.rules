@@ -1,0 +1,131 @@
+// firestore.rules
+// MatchMe Stellar — Firestore Security Rules
+//
+// ISS-040: Added to repo so rules are version-controlled and
+// reviewable. Deploy with: firebase deploy --only firestore:rules
+//
+// Key principles:
+//  1. Users can only read/write their OWN document in /users
+//  2. A user's stellarPublicKey and basic profile fields are
+//     readable by any authenticated user (needed for Explore/cards)
+//  3. Likes, passes, conversations are only accessible to the
+//     participants involved
+//  4. No unauthenticated access anywhere
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ─────────────────────────────────────────────
+    // Helper functions
+    // ─────────────────────────────────────────────
+
+    // Is the caller signed in?
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Is the caller the owner of this document?
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+
+    // Only the fields in this set are writable by the user themselves.
+    // Prevents a user from elevating isPremiumUser on their own document.
+    function isAllowedProfileField(field) {
+      return field in [
+        'fullname', 'bio', 'occupation', 'age',
+        'interests', 'photoURLs', 'profileSetupCompletion'
+      ];
+    }
+
+    // ─────────────────────────────────────────────
+    // /users/{userId}
+    // ─────────────────────────────────────────────
+    match /users/{userId} {
+
+      // Any authenticated user can read another user's public profile
+      // fields (needed for Explore cards, chat headers, etc.)
+      allow read: if isAuthenticated();
+
+      // Only the owner can create their own document (on signup)
+      allow create: if isOwner(userId);
+
+      // Owner can update only whitelisted profile fields.
+      // Fields like isPremiumUser, stellarPublicKey must be set
+      // server-side (Cloud Functions) to prevent spoofing.
+      allow update: if isOwner(userId)
+        && request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly([
+              'fullname', 'bio', 'occupation', 'age',
+              'interests', 'photoURLs', 'profileSetupCompletion'
+            ]);
+
+      // Only the owner can delete their own document
+      allow delete: if isOwner(userId);
+    }
+
+    // ─────────────────────────────────────────────
+    // /likes/{userId}/liked/{targetId}
+    // Records a like from userId → targetId
+    // ─────────────────────────────────────────────
+    match /likes/{userId}/liked/{targetId} {
+      allow read, write: if isAuthenticated() && isOwner(userId);
+    }
+
+    // ─────────────────────────────────────────────
+    // /likes/{userId}/likedBy/{sourceId}
+    // Records that sourceId liked userId (written by sourceId)
+    // ─────────────────────────────────────────────
+    match /likes/{userId}/likedBy/{sourceId} {
+      // The target user can read who liked them
+      allow read: if isAuthenticated() && isOwner(userId);
+      // The source user writes this when they like someone
+      allow write: if isAuthenticated() && isOwner(sourceId);
+    }
+
+    // ─────────────────────────────────────────────
+    // /passes/{userId}/passed/{targetId}
+    // ─────────────────────────────────────────────
+    match /passes/{userId}/passed/{targetId} {
+      allow read, write: if isAuthenticated() && isOwner(userId);
+    }
+
+    // ─────────────────────────────────────────────
+    // /conversations/{conversationId}
+    // participants: [uid1, uid2]
+    // ─────────────────────────────────────────────
+    match /conversations/{conversationId} {
+      // Only participants can read or update the conversation metadata
+      allow read, update: if isAuthenticated()
+        && request.auth.uid in resource.data.participants;
+
+      // Either participant can create the conversation document
+      allow create: if isAuthenticated()
+        && request.auth.uid in request.resource.data.participants;
+
+      // Neither participant can delete a conversation (soft-delete only)
+      allow delete: if false;
+
+      // ── Messages subcollection ──
+      match /messages/{messageId} {
+        allow read: if isAuthenticated()
+          && request.auth.uid in get(/databases/$(database)/documents/conversations/$(conversationId)).data.participants;
+
+        allow create: if isAuthenticated()
+          && request.auth.uid == request.resource.data.senderID
+          && request.auth.uid in get(/databases/$(database)/documents/conversations/$(conversationId)).data.participants;
+
+        // Messages are immutable once sent
+        allow update, delete: if false;
+      }
+    }
+
+    // ─────────────────────────────────────────────
+    // Deny everything else by default
+    // ─────────────────────────────────────────────
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
