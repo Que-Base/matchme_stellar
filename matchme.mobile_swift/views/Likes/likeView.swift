@@ -47,7 +47,7 @@ struct LikeView: View {
                 // MARK: Content
                 if viewModel.isLoading {
                     Spacer()
-                    ProgressView()
+                    CuddleLoadingView()
                     Spacer()
 
                 } else if viewModel.profiles.isEmpty {

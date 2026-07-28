@@ -36,8 +36,10 @@ struct ExploreView: View {
                 // MARK: Content
                 if viewModel.isLoading {
                     Spacer()
-                    ProgressView()
-                    Spacer()
+                    ExploreCardSkeleton()
+                        .frame(maxHeight: .infinity)
+                        .padding(.horizontal, 20)
+                    Spacer(minLength: 100)
 
                 } else if viewModel.profiles.isEmpty {
                     Spacer()
