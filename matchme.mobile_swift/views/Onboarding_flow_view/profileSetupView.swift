@@ -87,10 +87,10 @@ struct ProfileSetupView: View {
         }
     }
 
-    // MARK: - ISS-014b: Save to Firestore
+    // MARK: - ISS-014b / ISS-038: Save to Firestore via ProfileViewModel
 
     private func saveProfile() async {
-        guard let uid = authViewModel.currentUser?.id else { return }
+        guard authViewModel.currentUser != nil else { return }
         guard !textNameField.trimmingCharacters(in: .whitespaces).isEmpty else {
             errorMessage = "Please enter your full name."
             return
@@ -99,23 +99,24 @@ struct ProfileSetupView: View {
         isSaving = true
         errorMessage = nil
 
-        do {
-            try await Firestore.firestore()
-                .collection("users")
-                .document(uid)
-                .updateData([
-                    "fullname": textNameField,
-                    "occupation": textJobField,
-                    "bio": textBioField,
-                    "profileSetupCompletion": computeCompletion()
-                ])
+        // Build a ProfileViewModel from current user then mutate + persist
+        if let user = authViewModel.currentUser {
+            let vm = ProfileViewModel(from: user)
+            let parts = textNameField.trimmingCharacters(in: .whitespaces)
+                .split(separator: " ", maxSplits: 1)
+            vm.firstName = parts.first.map(String.init) ?? textNameField
+            vm.lastName = parts.dropFirst().first.map(String.init) ?? ""
+            vm.occupation = textJobField
+            vm.bio = textBioField
+            vm.profileSetupComplition = computeCompletion()
 
-            // Refresh local user object
-            await authViewModel.fetchUser()
-            onComplete?()
-
-        } catch {
-            errorMessage = error.localizedDescription
+            do {
+                try await vm.updateProfile()
+                await authViewModel.fetchUser()
+                onComplete?()
+            } catch {
+                errorMessage = error.localizedDescription
+            }
         }
 
         isSaving = false
