@@ -4,20 +4,32 @@
 //
 //  Created by Gideon Adewuyi on 07/09/2024.
 //
+//  ISS-038: Added Firestore write-back so profile edits persist across
+//  sessions. updateProfile() writes all fields; updateField() writes
+//  a single key for lightweight partial updates.
+//
 
 import SwiftUI
+import FirebaseFirestore
 
 @Observable class ProfileViewModel {
     var firstName: String
     var lastName: String
     var bio: String
     var occupation: String
-    var interests: [String]   // was: intersets (ISS-047 typo fixed)
+    var interests: [String]
     var age: Int
     var isPremiumUser: Bool
     var profileSetupComplition: Double
     var images: [String]
     var profileImage: String
+
+    /// Set when this VM is backed by a real Firestore document.
+    private var userID: String?
+
+    private let db = Firestore.firestore()
+
+    // MARK: - Inits
 
     init(
         firstName: String,
@@ -29,7 +41,8 @@ import SwiftUI
         profileSetupComplition: Double,
         bio: String,
         images: [String],
-        profileImage: String
+        profileImage: String,
+        userID: String? = nil
     ) {
         self.firstName = firstName
         self.lastName = lastName
@@ -41,10 +54,10 @@ import SwiftUI
         self.bio = bio
         self.images = images
         self.profileImage = profileImage
+        self.userID = userID
     }
 
-    // ISS-012a/b — build a ProfileViewModel from a real Firebase User.
-    // Falls back to empty/placeholder values for any fields not yet set.
+    /// ISS-012a/b — build from a real Firebase User, storing the UID for write-back.
     convenience init(from user: User) {
         let parts = user.fullname.split(separator: " ", maxSplits: 1)
         self.init(
@@ -57,11 +70,40 @@ import SwiftUI
             profileSetupComplition: user.profileSetupCompletion ?? 0.1,
             bio: user.bio ?? "",
             images: user.photoURLs ?? [],
-            profileImage: user.photoURLs?.first ?? ""
+            profileImage: user.photoURLs?.first ?? "",
+            userID: user.id
         )
     }
 
+    // MARK: - ISS-038: Firestore write-back
+
+    /// Writes all editable profile fields to Firestore.
+    /// Call after a batch edit (e.g. save button in ProfileSetupView).
+    func updateProfile() async throws {
+        guard let uid = userID else { return }
+        let fullname = [firstName, lastName]
+            .filter { !$0.isEmpty }
+            .joined(separator: " ")
+        try await db.collection("users").document(uid).updateData([
+            "fullname": fullname,
+            "bio": bio,
+            "occupation": occupation,
+            "age": age,
+            "interests": interests,
+            "profileSetupCompletion": profileSetupComplition
+        ])
+    }
+
+    /// Writes a single field to Firestore — use for lightweight toggles
+    /// or inline edits that don't require a full save action.
+    /// Example: `try await vm.updateField("bio", value: newBio)`
+    func updateField(_ key: String, value: Any) async throws {
+        guard let uid = userID else { return }
+        try await db.collection("users").document(uid).updateData([key: value])
+    }
+
 }
+
 
 extension ProfileViewModel {
     static func jostevModel(
