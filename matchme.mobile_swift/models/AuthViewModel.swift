@@ -24,6 +24,9 @@ enum AuthState {
     /// ISS-036 — surface auth errors to the UI instead of only print()-ing them.
     var errorMessage: String?
 
+    /// ISS-039 — true while fetchUser() or createUser() is in-flight.
+    var isLoading: Bool = false
+
     // Retain the listener handle so it is not immediately deallocated
     private var authStateListenerHandle: AuthStateDidChangeListenerHandle?
 
@@ -128,16 +131,16 @@ enum AuthState {
     }
 
     func fetchUser() async {
-        guard let uid = Auth.auth().currentUser?.uid
-        else { return }
+        guard let uid = Auth.auth().currentUser?.uid else { return }
 
-        guard
-            let snapshot =
-                try? await Firestore
-                .firestore()
-                .collection("users")
-                .document(uid)
-                .getDocument()
+        isLoading = true
+        defer { isLoading = false }
+
+        guard let snapshot = try? await Firestore
+            .firestore()
+            .collection("users")
+            .document(uid)
+            .getDocument()
         else { return }
 
         self.currentUser = try? snapshot.data(as: User.self)

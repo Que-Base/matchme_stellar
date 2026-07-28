@@ -35,7 +35,7 @@ struct ChatView: View {
                 // MARK: Content
                 if viewModel.isLoadingConversations {
                     Spacer()
-                    ProgressView()
+                    CuddleLoadingView()
                     Spacer()
 
                 } else if viewModel.conversations.isEmpty {
