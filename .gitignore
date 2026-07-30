@@ -27,5 +27,9 @@ GoogleService-Info.plist
 # Session exports
 *-session.json
 
+# Kiro chat saves
+mobile-steller.json
+*-steller.json
+
 # macOS
 .DS_Store
