@@ -9,78 +9,77 @@ import SwiftUI
 import SwiftfulRouting
 
 struct DashboardView: View {
-		@State var currentPage = 3
-		var body: some View {
-				TabView(selection: $currentPage) {
-						ExploreView()
-								.tabItem {
-										CuddleTabItem(
-												activeImage: "explore_active",
-												inactiveImage: "explore_inactive",
-												label: "Explore",
-												isActive: currentPage == 0
-										)
-								}.tag(0)
+    @State var currentPage = 3
 
-						LikeView()
-								.tabItem {
-										CuddleTabItem(
-												activeImage: "likes_active",
-												inactiveImage: "likes_inactive",
-												label: "Likes",
-												isActive: currentPage == 1
-										)
+    var body: some View {
+        TabView(selection: $currentPage) {
+            ExploreView()
+                .tabItem {
+                    CuddleTabItem(
+                        activeImage: "explore_active",
+                        inactiveImage: "explore_inactive",
+                        label: "Explore",
+                        tag: 0,
+                        selection: $currentPage
+                    )
+                }.tag(0)
 
-								}.tag(1)
+            LikeView()
+                .tabItem {
+                    CuddleTabItem(
+                        activeImage: "likes_active",
+                        inactiveImage: "likes_inactive",
+                        label: "Likes",
+                        tag: 1,
+                        selection: $currentPage
+                    )
+                }.tag(1)
 
-						ChatView()
-								.tabItem {
-										CuddleTabItem(
-												activeImage: "message_active",
-												inactiveImage: "message_inactive",
-												label: "Chats",
-												isActive: currentPage == 2
-										)
-								}.tag(2)
+            ChatView()
+                .tabItem {
+                    CuddleTabItem(
+                        activeImage: "message_active",
+                        inactiveImage: "message_inactive",
+                        label: "Chats",
+                        tag: 2,
+                        selection: $currentPage
+                    )
+                }.tag(2)
 
-						ProfileView()
-								.tabItem {
-										CuddleTabItem(
-												activeImage: "user_active",
-												inactiveImage: "user_inactive",
-												label: "Profile",
-												isActive: currentPage == 3
-										)
-								}.tag(3)
-				}
-				.tint(.black)
-		}
+            ProfileView()
+                .tabItem {
+                    CuddleTabItem(
+                        activeImage: "user_active",
+                        inactiveImage: "user_inactive",
+                        label: "Profile",
+                        tag: 3,
+                        selection: $currentPage
+                    )
+                }.tag(3)
+        }
+        .tint(.black)
+    }
 }
 
+// ISS-042: Drive isActive from the TabView selection binding directly
+// so the label re-evaluates whenever the user switches tabs.
 struct CuddleTabItem: View {
-		let activeImage: String
-		let inactiveImage: String
-		let label: String
-		let isActive: Bool
+    let activeImage: String
+    let inactiveImage: String
+    let label: String
+    let tag: Int
+    @Binding var selection: Int
 
-		var body: some View {
+    private var isActive: Bool { selection == tag }
 
-				VStack {
-						if isActive {
-								Image(activeImage)
-
-								Text(label)
-										.cuddleFont(size: 10, weight: .medium)
-
-						} else {
-								Image(inactiveImage)
-								Text(label)
-										.cuddleFont(size: 10, weight: .regular)
-										.foregroundStyle(.greyABAD)
-						}
-
-				}
-		}
+    var body: some View {
+        VStack {
+            Image(isActive ? activeImage : inactiveImage)
+            Text(label)
+                .cuddleFont(size: 10, weight: isActive ? .medium : .regular)
+                .foregroundStyle(isActive ? .primary : .greyABAD)
+        }
+    }
 }
 
 #Preview {
