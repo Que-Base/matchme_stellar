@@ -21,7 +21,7 @@ final class AuthViewModelTests: XCTestCase {
 
     func test_initialAuthState_isUndefined() {
         let vm = AuthViewModel()
-        XCTAssertEqual(vm.authState, .undifined)
+        XCTAssertEqual(vm.authState, .undefined)
     }
 
     func test_initialCurrentUser_isNil() {

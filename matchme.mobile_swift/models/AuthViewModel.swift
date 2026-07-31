@@ -11,7 +11,7 @@ import FirebaseFirestore
 import SwiftUI
 
 enum AuthState {
-    case undifined
+    case undefined
     case authenticated
     case notAuthenticated
 }
@@ -19,7 +19,7 @@ enum AuthState {
 @Observable class AuthViewModel {
     var userSession: FirebaseAuth.User?
     var currentUser: User?
-    var authState: AuthState = .undifined
+    var authState: AuthState = .undefined
 
     /// ISS-036 — surface auth errors to the UI instead of only print()-ing them.
     var errorMessage: String?

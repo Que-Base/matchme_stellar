@@ -9,7 +9,7 @@ struct ContentView: View {
         Group {
             RouterView { _ in
                 switch authViewModel.authState {
-                case .undifined:
+                case .undefined:
                     CuddleLoadingView()
                 case .authenticated:
                     if authViewModel.currentUser != nil {
