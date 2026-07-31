@@ -2,16 +2,19 @@
 //  StellarWalletService.swift
 //  matchme.mobile_swift
 //
+//  ISS-050: Converted from `class` singleton to `actor`.
+//  All methods are now called with `await StellarWalletService.shared.method()`
+//  which ensures thread-safe access to Keychain helpers and Horizon queries.
+//
 
 import Foundation
 import Security
 import stellarsdk
 
-class StellarWalletService {
+actor StellarWalletService {
 
     static let shared = StellarWalletService()
     private let sdk = StellarSDK.testNet()
-
     private let keychainSecretKey = "com.matchme.stellar.secretKey"
 
     // MARK: - Keypair
@@ -59,7 +62,11 @@ class StellarWalletService {
         SecItemDelete(query as CFDictionary)
         let status = SecItemAdd(query as CFDictionary, nil)
         guard status == errSecSuccess else {
-            throw NSError(domain: "StellarWallet", code: Int(status), userInfo: [NSLocalizedDescriptionKey: "Keychain write failed"])
+            throw NSError(
+                domain: "StellarWallet",
+                code: Int(status),
+                userInfo: [NSLocalizedDescriptionKey: "Keychain write failed"]
+            )
         }
     }
 

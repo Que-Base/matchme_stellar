@@ -15,51 +15,47 @@ final class StellarWalletServiceTests: XCTestCase {
 
     override func tearDown() {
         // Clean up any keypair written during tests
-        service.clearKeypair()
+        Task { await service.clearKeypair() }
         super.tearDown()
     }
 
     // MARK: - Keypair generation
 
-    func test_getOrCreateKeypair_returnsKeypair() throws {
-        let keypair = try service.getOrCreateKeypair()
+    func test_getOrCreateKeypair_returnsKeypair() async throws {
+        let keypair = try await service.getOrCreateKeypair()
         XCTAssertNotNil(keypair)
     }
 
-    func test_getOrCreateKeypair_publicKeyIsNotEmpty() throws {
-        let keypair = try service.getOrCreateKeypair()
+    func test_getOrCreateKeypair_publicKeyIsNotEmpty() async throws {
+        let keypair = try await service.getOrCreateKeypair()
         XCTAssertFalse(keypair.accountId.isEmpty)
     }
 
-    func test_getOrCreateKeypair_publicKeyStartsWithG() throws {
+    func test_getOrCreateKeypair_publicKeyStartsWithG() async throws {
         // Stellar public keys always start with 'G'
-        let keypair = try service.getOrCreateKeypair()
+        let keypair = try await service.getOrCreateKeypair()
         XCTAssertTrue(
             keypair.accountId.hasPrefix("G"),
             "Expected Stellar public key to start with 'G', got: \(keypair.accountId)"
         )
     }
 
-    func test_getOrCreateKeypair_returnsSameKeypairOnSecondCall() throws {
-        let first = try service.getOrCreateKeypair()
-        let second = try service.getOrCreateKeypair()
+    func test_getOrCreateKeypair_returnsSameKeypairOnSecondCall() async throws {
+        let first = try await service.getOrCreateKeypair()
+        let second = try await service.getOrCreateKeypair()
         XCTAssertEqual(first.accountId, second.accountId)
     }
 
     // MARK: - Keychain clear
 
-    func test_clearKeypair_removesFromKeychain() throws {
+    func test_clearKeypair_removesFromKeychain() async throws {
         // Create a keypair first
-        _ = try service.getOrCreateKeypair()
-
+        _ = try await service.getOrCreateKeypair()
         // Clear it
-        service.clearKeypair()
-
-        // A new call should generate a different keypair (new random seed)
-        let newKeypair = try service.getOrCreateKeypair()
+        await service.clearKeypair()
+        // A new call should succeed (generates fresh keypair)
+        let newKeypair = try await service.getOrCreateKeypair()
         XCTAssertNotNil(newKeypair)
-        // We can't assert it's *different* since it's random, but
-        // we can assert it succeeds without throwing
     }
 
     // MARK: - Balance parsing

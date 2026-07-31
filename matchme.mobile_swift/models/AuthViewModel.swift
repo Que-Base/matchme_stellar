@@ -66,7 +66,7 @@ enum AuthState {
 
             // Generate Stellar keypair and fund on testnet
             let stellarPublicKey: String?
-            if let kp = try? StellarWalletService.shared.getOrCreateKeypair() {
+            if let kp = try? await StellarWalletService.shared.getOrCreateKeypair() {
                 stellarPublicKey = kp.accountId
                 try? await StellarWalletService.shared.fundTestnetAccount(publicKey: kp.accountId)
             } else {
@@ -118,7 +118,7 @@ enum AuthState {
             try await user.delete()
 
             // Clear Stellar keypair from Keychain
-            StellarWalletService.shared.clearKeypair()
+            await StellarWalletService.shared.clearKeypair()
 
             // Reset local state
             self.userSession = nil
