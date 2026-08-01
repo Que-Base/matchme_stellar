@@ -25,6 +25,7 @@ public enum StellarWalletServiceError: LocalizedError {
     case keypairNotFound
     case invalidPublicKey(String)
     case accountNotFound(String)
+    case insufficientBalance(required: String, available: String)
     case trustlineCreationFailed(String)
     case transactionFailed(String)
 
@@ -36,6 +37,8 @@ public enum StellarWalletServiceError: LocalizedError {
             return "Invalid Stellar public key format: \(key)"
         case .accountNotFound(let key):
             return "Stellar account \(key) not found on ledger. Please fund account first."
+        case .insufficientBalance(let required, let available):
+            return "Insufficient balance: Required \(required), but available is \(available)."
         case .trustlineCreationFailed(let reason):
             return "Failed to establish trustline: \(reason)"
         case .transactionFailed(let reason):
@@ -140,6 +143,100 @@ actor StellarWalletService {
             return "TRUSTLINE_ALREADY_EXISTS"
         }
         return try await addTrustline(assetCode: MatchAssetConfig.code)
+    }
+
+    // MARK: - Payments & Transfers (ISS-023)
+
+    /// Submits a Stellar PaymentOperation to transfer XLM or custom assets (MATCH) to a recipient address.
+    /// - Parameters:
+    ///   - destinationPublicKey: Recipient's Stellar Ed25519 public key.
+    ///   - assetCode: Asset code to transfer ("XLM" for native, or "MATCH"). Default is "MATCH".
+    ///   - issuerAccountId: Issuer public key if asset is a credit asset (defaults to MatchAssetConfig.defaultIssuerAccountId).
+    ///   - amount: Amount to transfer as a Decimal value.
+    ///   - memoText: Optional text memo attached to transaction.
+    /// - Returns: The transaction hash on successful submission.
+    @discardableResult
+    func sendPayment(
+        to destinationPublicKey: String,
+        assetCode: String = MatchAssetConfig.code,
+        issuerAccountId: String = MatchAssetConfig.defaultIssuerAccountId,
+        amount: Decimal,
+        memoText: String? = nil
+    ) async throws -> String {
+        // 1. Load sender keypair from Keychain (ISS-023b)
+        guard let senderKeyPair = try? getOrCreateKeypair() else {
+            throw StellarWalletServiceError.keypairNotFound
+        }
+
+        // 2. Validate destination keypair format (ISS-023f)
+        guard let destinationKeyPair = try? KeyPair(accountId: destinationPublicKey) else {
+            throw StellarWalletServiceError.invalidPublicKey(destinationPublicKey)
+        }
+
+        // 3. Fetch sender account details and sequence number from Horizon (ISS-023c)
+        guard let senderAccount = try? await sdk.accounts.getAccountDetails(accountId: senderKeyPair.accountId) else {
+            throw StellarWalletServiceError.accountNotFound(senderKeyPair.accountId)
+        }
+
+        // 4. Verify destination account exists on ledger (ISS-023f)
+        guard let destinationAccount = try? await sdk.accounts.getAccountDetails(accountId: destinationPublicKey) else {
+            throw StellarWalletServiceError.accountNotFound(destinationPublicKey)
+        }
+
+        // 5. Construct Asset (Native XLM vs Credit Asset) (ISS-023a)
+        let asset: Asset
+        if assetCode == "XLM" || assetCode == AssetTypeAsString.NATIVE {
+            guard let nativeAsset = Asset(type: AssetType.ASSET_TYPE_NATIVE) else {
+                throw StellarWalletServiceError.invalidPublicKey("NATIVE")
+            }
+            asset = nativeAsset
+        } else {
+            guard let issuerKeyPair = try? KeyPair(accountId: issuerAccountId),
+                  let creditAsset = Asset(type: AssetType.ASSET_TYPE_CREDIT_ALPHANUM4, code: assetCode, issuer: issuerKeyPair) else {
+                throw StellarWalletServiceError.invalidPublicKey(issuerAccountId)
+            }
+            // Check recipient has established trustline for credit asset
+            let hasTrust = destinationAccount.balances.contains { b in
+                b.assetCode == assetCode && b.assetIssuer == issuerAccountId
+            }
+            guard hasTrust else {
+                throw StellarWalletServiceError.trustlineCreationFailed("Destination account does not have a trustline for \(assetCode)")
+            }
+            asset = creditAsset
+        }
+
+        // 6. Check sender balance (ISS-023f)
+        let currentBalanceDecimal: Decimal
+        if assetCode == "XLM" || assetCode == AssetTypeAsString.NATIVE {
+            let balStr = senderAccount.balances.first { $0.assetType == AssetTypeAsString.NATIVE }?.balance ?? "0"
+            currentBalanceDecimal = Decimal(string: balStr) ?? 0
+        } else {
+            let balStr = senderAccount.balances.first { $0.assetCode == assetCode && $0.assetIssuer == issuerAccountId }?.balance ?? "0"
+            currentBalanceDecimal = Decimal(string: balStr) ?? 0
+        }
+
+        guard currentBalanceDecimal >= amount else {
+            throw StellarWalletServiceError.insufficientBalance(
+                required: "\(amount) \(assetCode)",
+                available: "\(currentBalanceDecimal) \(assetCode)"
+            )
+        }
+
+        // 7. Build PaymentOperation (ISS-023a)
+        let paymentOp = PaymentOperation(sourceAccount: nil, destination: destinationKeyPair, asset: asset, amount: amount)
+
+        // 8. Build & Sign Transaction Envelope (ISS-023b, ISS-023c)
+        let memo = memoText != nil ? try? Memo.text(memoText!) : nil
+        let transaction = try Transaction(sourceAccount: senderAccount, operations: [paymentOp], memo: memo ?? Memo.none)
+        try transaction.sign(keyPair: senderKeyPair, network: Network.testnet)
+
+        // 9. Submit to Horizon (ISS-023d, ISS-023e)
+        let response = try await sdk.transactions.submitTransaction(transaction: transaction)
+        if response.successful {
+            return response.transactionHash
+        } else {
+            throw StellarWalletServiceError.transactionFailed("Payment submission rejected by Horizon network")
+        }
     }
 
     private func hasAlreadyEstablishedTrustline(accountDetails: AccountResponse, assetCode: String, issuerAccountId: String) -> Bool {

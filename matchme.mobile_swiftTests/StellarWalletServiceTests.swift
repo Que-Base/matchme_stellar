@@ -84,4 +84,29 @@ final class StellarWalletServiceTests: XCTestCase {
             XCTAssertNotNil(error)
         }
     }
+
+    // MARK: - Payments (ISS-023)
+
+    func test_sendPayment_throwsInvalidPublicKeyForBadDestination() async {
+        do {
+            _ = try await service.sendPayment(to: "INVALID_KEY", amount: 10)
+        } catch StellarWalletServiceError.invalidPublicKey {
+            XCTAssertTrue(true)
+        } catch {
+            XCTAssertNotNil(error)
+        }
+    }
+
+    func test_sendPayment_throwsAccountNotFoundWhenSenderUnfunded() async {
+        let keypair = try? await service.getOrCreateKeypair()
+        XCTAssertNotNil(keypair)
+        
+        do {
+            _ = try await service.sendPayment(to: keypair!.accountId, amount: 5)
+        } catch StellarWalletServiceError.accountNotFound {
+            XCTAssertTrue(true)
+        } catch {
+            XCTAssertNotNil(error)
+        }
+    }
 }

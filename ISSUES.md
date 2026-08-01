@@ -355,7 +355,7 @@ Before a user can receive MATCH tokens, they must establish a trustline for the 
 ---
 
 ### ISS-023 · Payment / transfer not implemented
-**Status:** 🔴 OPEN  
+**Status:** 🟢 CLOSED — implemented in branch `feat/iss-023-payment-transfer`  
 **Tags:** `[stellar]` `[missing]`  
 **File:** `models/StellarWalletService.swift`
 
@@ -767,7 +767,7 @@ The file is named `cuddleProfileImage.swift` but contains `CuddleProfileInfoView
 | ISS-020 | Public key persisted to Firestore | 🟢 CLOSED | `[stellar]` `[firebase]` | Stellar P1 |
 | ISS-021 | Live XLM balance display | 🟢 CLOSED | `[stellar]` | Stellar P1 |
 | ISS-022 | MATCH trustline not implemented | 🟢 CLOSED | `[stellar]` `[missing]` `[blocking]` | Stellar P2 |
-| ISS-023 | Payment / transfer not implemented | 🔴 OPEN | `[stellar]` `[missing]` | Stellar P2 |
+| ISS-023 | Payment / transfer not implemented | 🟢 CLOSED | `[stellar]` `[missing]` | Stellar P2 |
 | ISS-024 | MATCH balance query not implemented | 🔴 OPEN | `[stellar]` `[missing]` | Stellar P2 |
 | ISS-025 | Transaction history not implemented | 🔴 OPEN | `[stellar]` `[missing]` | Stellar P2 |
 | ISS-026 | Earn/spend event triggers not implemented | 🔴 OPEN | `[stellar]` `[missing]` `[firebase]` | Stellar P2 |
