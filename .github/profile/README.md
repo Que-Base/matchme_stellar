@@ -21,18 +21,18 @@
 
 ### 🛠 Technology Stack
 
-- **Mobile**: Swift 5.10+, SwiftUI, SwiftfulRouting
+- **Mobile Frameworks**: Swift 5.10+, SwiftUI, SwiftfulRouting
 - **Blockchain**: Stellar Horizon SDK, Soroban Smart Contracts (Rust)
 - **Backend & Cloud**: Firebase Auth, Cloud Firestore, Cloud Storage
 - **DevOps**: GitHub Actions CI/CD, XCTest, Pre-commit Hooks
 
 ---
 
-### 📚 Community & Standards
+### 📚 Governance & Security
 
 - **[Security Policy](https://github.com/Que-Base/matchme_stellar/blob/main/SECURITY.md)** — Non-custodial key safety & vulnerability reporting.
 - **[Contributing Guide](https://github.com/Que-Base/matchme_stellar/blob/main/CONTRIBUTING.md)** — Repository conventions and PR guidelines.
-- **License**: All core repositories are licensed under the [MIT License](https://github.com/Que-Base/matchme_stellar/blob/main/LICENSE).
+- **License**: Core repositories licensed under the [MIT License](https://github.com/Que-Base/matchme_stellar/blob/main/LICENSE).
 
 ---
 
