@@ -9,7 +9,40 @@
 
 import Foundation
 import Security
-import stellarsdk
+// MARK: - MATCH Asset Configuration (ISS-022a)
+
+public struct MatchAssetConfig {
+    /// Asset code for the MatchMe protocol token
+    public static let code = "MATCH"
+    
+    /// Default testnet issuer account public key for MATCH tokens
+    public static let defaultIssuerAccountId = "GBMATCHMEISSUERACCOUNTXLMSTELLARPUBLICKEY1234567890123"
+}
+
+// MARK: - Stellar Wallet Errors
+
+public enum StellarWalletServiceError: LocalizedError {
+    case keypairNotFound
+    case invalidPublicKey(String)
+    case accountNotFound(String)
+    case trustlineCreationFailed(String)
+    case transactionFailed(String)
+
+    public var errorDescription: String? {
+        switch self {
+        case .keypairNotFound:
+            return "No Stellar keypair found in iOS Keychain."
+        case .invalidPublicKey(let key):
+            return "Invalid Stellar public key format: \(key)"
+        case .accountNotFound(let key):
+            return "Stellar account \(key) not found on ledger. Please fund account first."
+        case .trustlineCreationFailed(let reason):
+            return "Failed to establish trustline: \(reason)"
+        case .transactionFailed(let reason):
+            return "Transaction submission failed: \(reason)"
+        }
+    }
+}
 
 actor StellarWalletService {
 
@@ -35,6 +68,84 @@ actor StellarWalletService {
     /// Funds the account via Friendbot (testnet only).
     func fundTestnetAccount(publicKey: String) async throws {
         try await sdk.accounts.createTestAccount(accountId: publicKey)
+    }
+
+    // MARK: - Trustlines (ISS-022)
+
+    /// Checks if the given account has an established trustline for the specified asset code and optional issuer.
+    func hasTrustline(for publicKey: String, assetCode: String = MatchAssetConfig.code, issuerAccountId: String? = nil) async -> Bool {
+        guard let accountDetails = try? await sdk.accounts.getAccountDetails(accountId: publicKey) else {
+            return false
+        }
+        return accountDetails.balances.contains { balance in
+            if balance.assetCode == assetCode {
+                if let issuer = issuerAccountId {
+                    return balance.assetIssuer == issuer
+                }
+                return true
+            }
+            return false
+        }
+    }
+
+    /// Establishes a trustline for the MATCH token (or custom asset) if not already created.
+    /// Returns the transaction hash on success.
+    @discardableResult
+    func addTrustline(
+        assetCode: String = MatchAssetConfig.code,
+        issuerAccountId: String = MatchAssetConfig.defaultIssuerAccountId,
+        limit: Decimal? = nil
+    ) async throws -> String {
+        guard let keypair = try? getOrCreateKeypair() else {
+            throw StellarWalletServiceError.keypairNotFound
+        }
+
+        // 1. Verify account exists on ledger
+        guard let accountDetails = try? await sdk.accounts.getAccountDetails(accountId: keypair.accountId) else {
+            throw StellarWalletServiceError.accountNotFound(keypair.accountId)
+        }
+
+        // 2. Check if trustline already exists (ISS-022e)
+        if hasAlreadyEstablishedTrustline(accountDetails: accountDetails, assetCode: assetCode, issuerAccountId: issuerAccountId) {
+            return "TRUSTLINE_ALREADY_EXISTS"
+        }
+
+        // 3. Construct Asset
+        guard let issuerKeyPair = try? KeyPair(accountId: issuerAccountId),
+              let asset = Asset(type: AssetType.ASSET_TYPE_CREDIT_ALPHANUM4, code: assetCode, issuer: issuerKeyPair) else {
+            throw StellarWalletServiceError.invalidPublicKey(issuerAccountId)
+        }
+
+        // 4. Construct ChangeTrustOperation
+        let changeTrustOp = ChangeTrustOperation(sourceAccount: nil, asset: asset, limit: limit)
+
+        // 5. Create Transaction
+        let transaction = try Transaction(sourceAccount: accountDetails, operations: [changeTrustOp], memo: Memo.none)
+        try transaction.sign(keyPair: keypair, network: Network.testnet)
+
+        // 6. Submit Transaction to Horizon
+        let response = try await sdk.transactions.submitTransaction(transaction: transaction)
+        if response.successful {
+            return response.transactionHash
+        } else {
+            throw StellarWalletServiceError.transactionFailed("Submission rejected by Horizon")
+        }
+    }
+
+    /// Ensures a trustline for MATCH asset exists for the user account, adding it if missing (ISS-022d).
+    @discardableResult
+    func ensureMatchTrustline(publicKey: String) async throws -> String? {
+        let exists = await hasTrustline(for: publicKey, assetCode: MatchAssetConfig.code)
+        if exists {
+            return "TRUSTLINE_ALREADY_EXISTS"
+        }
+        return try await addTrustline(assetCode: MatchAssetConfig.code)
+    }
+
+    private func hasAlreadyEstablishedTrustline(accountDetails: AccountResponse, assetCode: String, issuerAccountId: String) -> Bool {
+        return accountDetails.balances.contains { balance in
+            return balance.assetCode == assetCode && balance.assetIssuer == issuerAccountId
+        }
     }
 
     // MARK: - Balance

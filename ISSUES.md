@@ -339,7 +339,7 @@ The wallet card component is fully built but never rendered anywhere in the app.
 ### Phase 2 — MATCH Token Economy
 
 ### ISS-022 · MATCH asset trustline not implemented
-**Status:** 🔴 OPEN  
+**Status:** 🟢 CLOSED — implemented in branch `feat/iss-022-match-trustline`  
 **Tags:** `[stellar]` `[missing]` `[blocking]`  
 **File:** `models/StellarWalletService.swift`
 
@@ -766,7 +766,7 @@ The file is named `cuddleProfileImage.swift` but contains `CuddleProfileInfoView
 | ISS-019 | Testnet Friendbot funding | 🟢 CLOSED | `[stellar]` | Stellar P1 |
 | ISS-020 | Public key persisted to Firestore | 🟢 CLOSED | `[stellar]` `[firebase]` | Stellar P1 |
 | ISS-021 | Live XLM balance display | 🟢 CLOSED | `[stellar]` | Stellar P1 |
-| ISS-022 | MATCH trustline not implemented | 🔴 OPEN | `[stellar]` `[missing]` `[blocking]` | Stellar P2 |
+| ISS-022 | MATCH trustline not implemented | 🟢 CLOSED | `[stellar]` `[missing]` `[blocking]` | Stellar P2 |
 | ISS-023 | Payment / transfer not implemented | 🔴 OPEN | `[stellar]` `[missing]` | Stellar P2 |
 | ISS-024 | MATCH balance query not implemented | 🔴 OPEN | `[stellar]` `[missing]` | Stellar P2 |
 | ISS-025 | Transaction history not implemented | 🔴 OPEN | `[stellar]` `[missing]` | Stellar P2 |

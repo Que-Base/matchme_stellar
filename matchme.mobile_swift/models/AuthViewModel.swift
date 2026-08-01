@@ -64,11 +64,12 @@ enum AuthState {
             let result = try await Auth.auth().createUser(withEmail: email, password: password)
             self.userSession = result.user
 
-            // Generate Stellar keypair and fund on testnet
+            // Generate Stellar keypair, fund on testnet, and establish MATCH trustline (ISS-022d)
             let stellarPublicKey: String?
             if let kp = try? await StellarWalletService.shared.getOrCreateKeypair() {
                 stellarPublicKey = kp.accountId
                 try? await StellarWalletService.shared.fundTestnetAccount(publicKey: kp.accountId)
+                try? await StellarWalletService.shared.ensureMatchTrustline(publicKey: kp.accountId)
             } else {
                 stellarPublicKey = nil
             }

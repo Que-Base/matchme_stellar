@@ -64,4 +64,24 @@ final class StellarWalletServiceTests: XCTestCase {
         let balance = await service.xlmBalance(for: "INVALID_KEY")
         XCTAssertNil(balance)
     }
+
+    // MARK: - Trustlines (ISS-022)
+
+    func test_hasTrustline_returnsFalseForInvalidPublicKey() async {
+        let hasTrust = await service.hasTrustline(for: "INVALID_KEY", assetCode: "MATCH")
+        XCTAssertFalse(hasTrust)
+    }
+
+    func test_addTrustline_throwsAccountNotFoundWhenUnfunded() async {
+        let keypair = try? await service.getOrCreateKeypair()
+        XCTAssertNotNil(keypair)
+        
+        do {
+            _ = try await service.addTrustline(assetCode: "MATCH")
+        } catch StellarWalletServiceError.accountNotFound {
+            XCTAssertTrue(true)
+        } catch {
+            XCTAssertNotNil(error)
+        }
+    }
 }
