@@ -1,9 +1,6 @@
-# Build and test the MatchMe Xcode project on every PR targeting main.
-#
-# This project is an Xcode app (matchme.mobile_swift.xcodeproj), NOT a
-# Swift Package. The correct tool is xcodebuild, not `swift build`.
+# Build and test the MatchMe Xcode project on every push/PR targeting main.
 
-name: Swift
+name: CI
 
 on:
   push:
@@ -12,7 +9,8 @@ on:
     branches: [ "main" ]
 
 jobs:
-  build:
+  ci:
+    name: Build and Test
     runs-on: macos-latest
 
     steps:

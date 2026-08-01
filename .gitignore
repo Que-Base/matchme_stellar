@@ -3,6 +3,8 @@
 xcuserdata/
 *.xcworkspace/xcuserdata/
 DerivedData/
+.DerivedData/
+.spm-cache/
 *.moved-aside
 *.pbxuser
 !default.pbxuser

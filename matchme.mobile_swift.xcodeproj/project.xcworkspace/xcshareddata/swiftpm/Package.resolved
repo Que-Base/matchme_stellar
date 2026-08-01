@@ -1,5 +1,5 @@
 {
-  "originHash" : "7a4c6ccf9ca89314ee33e75d7db86bb72678d1a6717f9a526a97f6f9317ae399",
+  "originHash" : "0afcee0edc56ea54c920e4ed7090caa11a90b736eea75f6b1f78789273dc8e2d",
   "pins" : [
     {
       "identity" : "abseil-cpp-binary",
@@ -107,6 +107,15 @@
       "state" : {
         "revision" : "540318ecedd63d883069ae7f1ed811a2df00b6ac",
         "version" : "2.4.0"
+      }
+    },
+    {
+      "identity" : "stellar-ios-mac-sdk",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/Soneso/stellar-ios-mac-sdk.git",
+      "state" : {
+        "revision" : "cd41bfa9e4dee0a506dfcd3ed5d0bb5548a092c3",
+        "version" : "2.6.6"
       }
     },
     {

@@ -1,0 +1,14 @@
+#!/usr/bin/env sh
+# Run git checks before each commit.
+# To skip (not recommended): git commit --no-verify
+set -e
+
+echo "Running pre-commit checks..."
+
+# Check for unresolved conflict markers
+if git diff --cached | grep -E '^(<<<<<<<|=======|>>>>>>>)' > /dev/null; then
+  echo "pre-commit error: Unresolved git conflict markers found in staged files."
+  exit 1
+fi
+
+echo "pre-commit: All checks passed."

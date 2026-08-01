@@ -1,90 +1,88 @@
-# MatchMe Stellar Mobile (Swift, Stellar)
+# MatchMe Mobile
 
-MatchMe is a modern, visually rich social networking application built with SwiftUI. It features a seamless onboarding experience, profile management, discovery (Explore), and real-time interactions (Chats/Likes). The application follows a modern MVVM architecture, integrates with Firebase for authentication and backend services, and uses the **Stellar blockchain** for decentralised identity, wallet management, and a token economy.
+SwiftUI iOS application and Stellar blockchain integration for the MatchMe social discovery network.
 
-## 🚀 Features
+## Overview
 
-- **Onboarding & Authentication**: Smooth user onboarding flow with secure Firebase-backed sign-up and profile setup.
-- **Stellar Wallet**: Every user gets a non-custodial Stellar wallet automatically on signup — keypair generated on-device, secret seed stored in Keychain.
-- **Discovery (Explore)**: An intuitive interface to discover other users.
-- **Interactions**: Like and connect with others, supported by a dedicated "Likes" view and real-time chat.
-- **Rich Profiles**: Comprehensive profile management including bios, interests, and photo uploads.
-- **Modern UI**: Custom-designed components with a focus on aesthetics, utilizing custom typography and gradients.
-- **Dynamic Routing**: Powered by `SwiftfulRouting` for a decoupled and flexible navigation experience.
+MatchMe is a modern social networking application built with SwiftUI, Firebase, and the Stellar blockchain. It combines dynamic discovery feeds, profile management, and real-time messaging with non-custodial Stellar wallet creation, testnet funding, and Horizon RPC balance tracking.
 
-## 🛠 Tech Stack
+## Components
 
-- **Language**: Swift 5.10+
+| Component | Path | Status | Description |
+|---|---|---|---|
+| **App Target** | `matchme.mobile_swift/` | ✅ Active | Primary SwiftUI application containing views, view models, and asset catalogs |
+| **Stellar Wallet Service** | `matchme.mobile_swift/models/StellarWalletService.swift` | ✅ Active | Thread-safe Swift `actor` handling keypair creation, Keychain vault storage, and Horizon RPC balance queries |
+| **Auth & Profile** | `matchme.mobile_swift/models/AuthViewModel.swift` | ✅ Active | Firebase Authentication, session lifecycle, secure form inputs, and profile state |
+| **Firestore Security** | `firestore.rules` | ✅ Active | Production Cloud Firestore security rules enforcing document-level owner authorization |
+| **Unit Test Suite** | `matchme.mobile_swiftTests/` | ✅ Active | XCTest unit test suite covering Auth, Stellar Wallet, and Profile models |
+
+## Tech Stack
+
+- **Language**: Swift 5.10+ (iOS 17.0+ SDK)
 - **UI Framework**: SwiftUI
+- **Architecture**: MVVM with Swift `@Observable` macro
 - **Navigation**: [SwiftfulRouting](https://github.com/SwiftfulThinking/SwiftfulRouting)
-- **Backend**: [Firebase](https://firebase.google.com/) (Auth, Firestore, Storage)
+- **Backend**: [Firebase](https://firebase.google.com/) (Auth, Firestore, Cloud Storage)
 - **Blockchain**: [Stellar](https://stellar.org) via [Soneso stellar-ios-mac-sdk](https://github.com/Soneso/stellar-ios-mac-sdk)
-- **Architecture**: MVVM (using the latest `@Observable` macro)
-- **Design Assets**: Custom icons (Linear & Misc), Custom Fonts (Athletics, General Sans, SF Pro Rounded)
+- **Build & CI**: Xcode, xcodebuild, GitHub Actions
 
-## ⛓ Stellar Integration
+## Documentation
 
-See [`STELLAR_ARCHITECTURE.md`](./STELLAR_ARCHITECTURE.md) for the full technical architecture and [`STELLAR_ROADMAP.md`](./STELLAR_ROADMAP.md) for the full feature roadmap.
+### Security
 
-### What's implemented
+Please review our [Security Policy](SECURITY.md) for information on reporting vulnerabilities and our non-custodial key storage model.
 
-- **Auto wallet creation** — a Stellar Ed25519 keypair is generated at signup. The secret seed is stored in iOS Keychain (`WhenUnlockedThisDeviceOnly`). The public key is saved to Firestore alongside the user's profile.
-- **Testnet funding** — new accounts are automatically funded via Friendbot (10,000 XLM on testnet).
-- **Live balance** — `StellarWalletView` fetches and displays the user's XLM balance from Horizon in real time.
-- **Non-custodial** — MatchMe never holds private keys. Users own their wallets.
+### Architecture & Standards
 
-### Stellar files
+- **[Contributing Guide](CONTRIBUTING.md)** - Code conventions, repository layout, and pre-PR verification guidelines.
+- **[Stellar Architecture Guide](STELLAR_ARCHITECTURE.md)** - Keypair generation, iOS Keychain access rules, and Horizon integration details.
+- **[Stellar Roadmap](STELLAR_ROADMAP.md)** - Multi-phase breakdown for tokens, smart contracts, and identity.
+- **[Issue Tracker](ISSUES.md)** - Master issue index and milestone tracking.
 
-| File | Purpose |
-|---|---|
-| `models/StellarWalletService.swift` | Keypair management, Keychain storage, Friendbot funding, balance queries |
-| `models/userModel.swift` | `stellarPublicKey` field on the `User` struct |
-| `models/AuthViewModel.swift` | Wallet creation wired into `createUser` |
-| `views/StellarWalletView.swift` | SwiftUI card showing public key + XLM balance |
+## Planned Functionality
 
-### Roadmap
+- `MATCH` token asset trustlines and balance queries
+- P2P token payments and tipping on profile interactions
+- Soroban smart contracts for premium subscriptions and date escrow
+- NFT profile badge minting on Stellar
+- 12-word seed phrase backup and mnemonic recovery flow
+- Stellar DID identity verification layer
 
-| Phase | Feature |
-|---|---|
-| ✅ Phase 1 | Wallet creation, Keychain storage, testnet funding, balance display |
-| 🔜 Phase 2 | `MATCH` token economy — earn on likes/matches, spend on super likes & tips |
-| 🔜 Phase 3 | Soroban smart contracts — subscriptions, date escrow, NFT profile badges |
-
-## 📁 Project Structure
+## Project Structure
 
 ```text
-matchme.mobile_swift/
-├── matchme_mobile_swiftApp.swift   # App entry point
-├── ContentView.swift                # Root view (auth routing)
-├── models/
-│   ├── AuthViewModel.swift          # Auth state + Stellar wallet wiring
-│   ├── userModel.swift              # User data structure (+ stellarPublicKey)
-│   ├── StellarWalletService.swift   # Stellar network interactions
-│   └── profileViewModel.swift       # Profile logic
-├── views/
-│   ├── StellarWalletView.swift      # Wallet card UI
-│   ├── dashboardView.swift          # Main tab navigation
-│   ├── Auth_view/                   # Sign up / sign in
-│   ├── Onboarding_flow_view/        # Profile setup & onboarding
-│   ├── Explore/                     # Discovery
-│   ├── Likes/                       # Likes feed
-│   ├── Chats/                       # Messaging
-│   ├── Profile/                     # Profile management
-│   └── reusable_views/              # Shared UI components
-├── Helpers/
-│   ├── cuddleColor.swift            # Color extensions
-│   ├── customScrollView.swift       # Scroll helpers
-│   └── Fonts/                       # Custom font assets
-└── Assets.xcassets/                 # Icons, logos, colors
+cuddleme.mobile_Stellar/
+├── matchme.mobile_swift/               # Primary iOS app target
+│   ├── matchme_mobile_swiftApp.swift   # App entry point
+│   ├── ContentView.swift                # Root view and auth router
+│   ├── models/                          # ViewModels and services
+│   ├── views/                           # Feature UI views
+│   ├── Helpers/                         # Utilities, typography, and styling
+│   └── Assets.xcassets/                 # Asset catalog
+├── matchme.mobile_swiftTests/          # XCTest unit test suite
+├── .githooks/                           # Pre-commit hook scripts
+├── .github/workflows/ci.yml             # GitHub Actions CI workflow
+├── scripts/                             # Operational helper scripts
+├── docs/                                # Project documentation assets
+├── firestore.rules                      # Cloud Firestore security rules
+├── firestore.indexes.json               # Cloud Firestore composite indexes
+├── STELLAR_ARCHITECTURE.md              # Technical architecture documentation
+├── STELLAR_ROADMAP.md                   # Feature roadmap documentation
+├── CONTRIBUTING.md                      # Contributor guide
+├── SECURITY.md                          # Security policy
+├── ISSUES.md                            # Issue tracker
+└── LICENSE                              # MIT License
 ```
 
-## ⚙️ Setup Instructions
+## Getting Started
 
 ### Prerequisites
-- macOS with **Xcode 15.0+**
-- A Firebase project set up in the [Firebase Console](https://console.firebase.google.com/)
 
-### Installation
+- **macOS** with **Xcode 15.0+** (iOS 17.0+ Simulator)
+- **Swift 5.10+** toolchain
+- A Firebase project configured in the [Firebase Console](https://console.firebase.google.com/)
+
+### Setup Instructions
 
 1. **Clone the repository**:
    ```bash
@@ -92,28 +90,34 @@ matchme.mobile_swift/
    cd matchme_stellar
    ```
 
-2. **Open the project**:
+2. **Configure local Git hooks**:
+   ```bash
+   bash scripts/setup-hooks.sh
    ```
-   open matchme.mobile_swift.xcodeproj
-   ```
 
-3. **Firebase Configuration**:
-   - Download `GoogleService-Info.plist` from the Firebase Console.
-   - Add it to the `matchme.mobile_swift/` directory in Xcode, ensuring it's added to the app target.
-   - `GoogleService-Info.plist` is gitignored — you must add it manually on each clone.
+3. **Add Firebase configuration**:
+   Download `GoogleService-Info.plist` from the Firebase Console and place it inside `matchme.mobile_swift/`.
 
-4. **Dependencies** — Xcode resolves all SPM packages automatically on first build:
-   - `Firebase` (Auth, Firestore, Storage, Messaging, etc.)
-   - `SwiftfulRouting`
-   - `SwiftfulRecursiveUI`
-   - `stellarsdk` (Soneso Stellar iOS/macOS SDK)
+4. **Build and Run**:
+   Open `matchme.mobile_swift.xcodeproj` in Xcode, select an iOS Simulator target, and press `Cmd + R`.
 
-5. **Run**:
-   Select a simulator (e.g., iPhone 15) and press `Cmd + R`.
+> **Stellar Network**: The app currently targets the **Stellar testnet**. New user wallets are funded automatically via Friendbot.
 
-> **Stellar network**: The app currently targets the **Stellar testnet**. New user accounts are funded automatically via Friendbot. No real XLM is used.
+## Developer Commands
 
-## 🎨 Design System
+Convenience scripts are provided in `scripts/`:
 
-- **Typography**: `Athletics`, `General Sans`, `SF Pro Rounded`
-- **Colors**: Defined in `cuddleColor.swift` — primary gradients (`gradientLight`, `gradientDark`) and secondary status colors
+```bash
+# Configure local Git hooks path
+bash scripts/setup-hooks.sh
+
+# Build the Xcode iOS application target
+bash scripts/build.sh
+
+# Run the unit test suite
+bash scripts/test.sh
+```
+
+## License
+
+This project is licensed under the [MIT License](LICENSE).

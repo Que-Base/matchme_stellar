@@ -39,16 +39,16 @@
 |---|---|---|---|---|
 | Authentication | 0 | 0 | 0 | 7 |
 | Core Views (Stubs) | 0 | 0 | 0 | 4 |
-| Profile | 4 | 0 | 0 | 0 |
-| Stellar — Phase 1 | 1 | 0 | 0 | 5 |
+| Profile | 0 | 0 | 0 | 4 |
+| Stellar — Phase 1 | 0 | 0 | 0 | 6 |
 | Stellar — Phase 2 | 5 | 0 | 0 | 0 |
-| Stellar — Phase 3 | 3 | 0 | 0 | 0 |
-| Stellar — Phase 4/5 | 4 | 0 | 0 | 0 |
-| Security | 3 | 0 | 0 | 1 |
-| Architecture | 4 | 0 | 0 | 0 |
-| UI / UX | 4 | 0 | 0 | 0 |
-| Tech Debt | 5 | 0 | 0 | 0 |
-| **Total** | **32** | **0** | **0** | **17** |
+| Stellar — Phase 3 | 0 | 0 | 3 | 0 |
+| Stellar — Phase 4/5 | 0 | 0 | 4 | 0 |
+| Security | 0 | 0 | 0 | 4 |
+| Architecture | 0 | 0 | 0 | 4 |
+| UI / UX | 0 | 0 | 0 | 4 |
+| Tech Debt | 0 | 0 | 0 | 5 |
+| **Total** | **5** | **0** | **7** | **38** |
 
 ---
 
@@ -778,20 +778,20 @@ The file is named `cuddleProfileImage.swift` but contains `CuddleProfileInfoView
 | ISS-031 | No seed phrase backup / recovery | ⏸ PENDING | `[stellar]` `[missing]` `[security]` | Stellar P4 |
 | ISS-032 | No transaction history view | ⏸ PENDING | `[stellar]` `[missing]` `[ux]` | Stellar P4 |
 | ISS-033 | DID layer not started | ⏸ PENDING | `[stellar]` `[missing]` | Stellar P5 |
-| ISS-034 | Password fields not SecureField | 🔴 OPEN | `[security]` `[bug]` | Security |
-| ISS-035 | Confirm password never validated | 🔴 OPEN | `[security]` `[bug]` `[ux]` | Security |
-| ISS-036 | No error handling shown to user | 🔴 OPEN | `[security]` `[ux]` `[bug]` | Security |
+| ISS-034 | Password fields not SecureField | 🟢 CLOSED | `[security]` `[bug]` | Security |
+| ISS-035 | Confirm password never validated | 🟢 CLOSED | `[security]` `[bug]` `[ux]` | Security |
+| ISS-036 | No error handling shown to user | 🟢 CLOSED | `[security]` `[ux]` `[bug]` | Security |
 | ISS-037 | Stellar private key never leaves device | 🟢 CLOSED | `[security]` `[stellar]` | Security |
-| ISS-038 | ProfileViewModel not Firestore-backed | 🔴 OPEN | `[arch]` `[firebase]` | Architecture |
-| ISS-039 | No loading states for async operations | 🔴 OPEN | `[arch]` `[ux]` | Architecture |
-| ISS-040 | No Firestore security rules in repo | 🔴 OPEN | `[security]` `[arch]` `[firebase]` | Architecture |
-| ISS-041 | No unit or integration tests | 🔴 OPEN | `[arch]` `[tech-debt]` | Architecture |
-| ISS-042 | Tab bar active state may desync | 🔴 OPEN | `[ui]` `[bug]` | UI/UX |
-| ISS-043 | "Log in" button goes nowhere | 🔴 OPEN | `[ux]` `[stub]` | UI/UX |
-| ISS-044 | Terms/Privacy Policy links no-op | 🔴 OPEN | `[ux]` `[stub]` | UI/UX |
-| ISS-045 | `UIScreen.main.bounds` deprecated usage | 🔴 OPEN | `[ui]` `[tech-debt]` | UI/UX |
-| ISS-046 | `AuthState.undifined` typo | 🔴 OPEN | `[tech-debt]` | Tech Debt |
-| ISS-047 | `ProfileViewModel.intersets` typo | 🔴 OPEN | `[tech-debt]` | Tech Debt |
-| ISS-048 | `cuddleProfileImage.swift` misleading filename | 🔴 OPEN | `[tech-debt]` | Tech Debt |
-| ISS-049 | `CuddleGraidientButton.swift` filename typo | 🔴 OPEN | `[tech-debt]` | Tech Debt |
-| ISS-050 | `StellarWalletService` should be an actor | 🔴 OPEN | `[tech-debt]` `[arch]` `[stellar]` | Tech Debt |
+| ISS-038 | ProfileViewModel not Firestore-backed | 🟢 CLOSED | `[arch]` `[firebase]` | Architecture |
+| ISS-039 | No loading states for async operations | 🟢 CLOSED | `[arch]` `[ux]` | Architecture |
+| ISS-040 | No Firestore security rules in repo | 🟢 CLOSED | `[security]` `[arch]` `[firebase]` | Architecture |
+| ISS-041 | No unit or integration tests | 🟢 CLOSED | `[arch]` `[tech-debt]` | Architecture |
+| ISS-042 | Tab bar active state may desync | 🟢 CLOSED | `[ui]` `[bug]` | UI/UX |
+| ISS-043 | "Log in" button goes nowhere | 🟢 CLOSED | `[ux]` `[stub]` | UI/UX |
+| ISS-044 | Terms/Privacy Policy links no-op | 🟢 CLOSED | `[ux]` `[stub]` | UI/UX |
+| ISS-045 | `UIScreen.main.bounds` deprecated usage | 🟢 CLOSED | `[ui]` `[tech-debt]` | UI/UX |
+| ISS-046 | `AuthState.undifined` typo | 🟢 CLOSED | `[tech-debt]` | Tech Debt |
+| ISS-047 | `ProfileViewModel.intersets` typo | 🟢 CLOSED | `[tech-debt]` | Tech Debt |
+| ISS-048 | `cuddleProfileImage.swift` misleading filename | 🟢 CLOSED | `[tech-debt]` | Tech Debt |
+| ISS-049 | `CuddleGraidientButton.swift` filename typo | 🟢 CLOSED | `[tech-debt]` | Tech Debt |
+| ISS-050 | `StellarWalletService` should be an actor | 🟢 CLOSED | `[tech-debt]` `[arch]` `[stellar]` | Tech Debt |
