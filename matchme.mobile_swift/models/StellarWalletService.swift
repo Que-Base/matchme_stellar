@@ -257,6 +257,20 @@ actor StellarWalletService {
             .map { $0.balance }
     }
 
+    /// Returns the MATCH token balance for the given public key, or nil if account or trustline is not found (ISS-024).
+    func matchBalance(
+        for publicKey: String,
+        assetCode: String = MatchAssetConfig.code,
+        issuerAccountId: String = MatchAssetConfig.defaultIssuerAccountId
+    ) async -> String? {
+        guard let response = try? await sdk.accounts.getAccountDetails(accountId: publicKey) else {
+            return nil
+        }
+        return response.balances
+            .first { $0.assetCode == assetCode && $0.assetIssuer == issuerAccountId }
+            .map { $0.balance }
+    }
+
     // MARK: - Keychain helpers
 
     private func saveSecretToKeychain(_ secret: String) throws {

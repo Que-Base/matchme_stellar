@@ -109,4 +109,11 @@ final class StellarWalletServiceTests: XCTestCase {
             XCTAssertNotNil(error)
         }
     }
+
+    // MARK: - MATCH Balance (ISS-024)
+
+    func test_matchBalance_returnsNilForInvalidPublicKey() async {
+        let matchBal = await service.matchBalance(for: "INVALID_KEY")
+        XCTAssertNil(matchBal)
+    }
 }

@@ -7,14 +7,25 @@ import SwiftUI
 
 struct StellarWalletView: View {
     let publicKey: String
-    @State private var balance: String = "Loading..."
+    @State private var xlmBalance: String = "Loading..."
+    @State private var matchBalance: String = "Loading..."
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Stellar Wallet")
-                .font(.headline)
+        VStack(alignment: .leading, spacing: 14) {
+            HStack {
+                Text("Stellar Wallet")
+                    .font(.headline)
+                Spacer()
+                Text("Testnet")
+                    .font(.caption2)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 3)
+                    .background(Color.blue.opacity(0.15))
+                    .foregroundStyle(.blue)
+                    .clipShape(Capsule())
+            }
 
-            VStack(alignment: .leading, spacing: 6) {
+            VStack(alignment: .leading, spacing: 4) {
                 Text("Public Key")
                     .font(.caption)
                     .foregroundStyle(.secondary)
@@ -25,19 +36,40 @@ struct StellarWalletView: View {
                     .textSelection(.enabled)
             }
 
-            VStack(alignment: .leading, spacing: 6) {
-                Text("XLM Balance")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                Text("\(balance) XLM")
-                    .font(.title3)
-                    .bold()
+            Divider()
+
+            HStack(spacing: 24) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("XLM Balance")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Text("\(xlmBalance) XLM")
+                        .font(.title3)
+                        .bold()
+                }
+
+                Spacer()
+
+                VStack(alignment: .trailing, spacing: 4) {
+                    Text("MATCH Balance")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Text("\(matchBalance) MATCH")
+                        .font(.title3)
+                        .bold()
+                        .foregroundStyle(.purple)
+                }
             }
         }
         .padding()
         .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
         .task {
-            balance = await StellarWalletService.shared.xlmBalance(for: publicKey) ?? "—"
+            async let xlm = StellarWalletService.shared.xlmBalance(for: publicKey)
+            async let match = StellarWalletService.shared.matchBalance(for: publicKey)
+            
+            let (fetchedXlm, fetchedMatch) = await (xlm, match)
+            self.xlmBalance = fetchedXlm ?? "0"
+            self.matchBalance = fetchedMatch ?? "0"
         }
     }
 }

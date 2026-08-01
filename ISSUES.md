@@ -372,7 +372,7 @@ No `sendPayment()` method exists. Neither peer-to-peer tipping nor backend rewar
 ---
 
 ### ISS-024 · MATCH token balance query not implemented
-**Status:** 🔴 OPEN  
+**Status:** 🟢 CLOSED — implemented in branch `feat/iss-024-match-balance`  
 **Tags:** `[stellar]` `[missing]`  
 **File:** `models/StellarWalletService.swift`
 
@@ -768,7 +768,7 @@ The file is named `cuddleProfileImage.swift` but contains `CuddleProfileInfoView
 | ISS-021 | Live XLM balance display | 🟢 CLOSED | `[stellar]` | Stellar P1 |
 | ISS-022 | MATCH trustline not implemented | 🟢 CLOSED | `[stellar]` `[missing]` `[blocking]` | Stellar P2 |
 | ISS-023 | Payment / transfer not implemented | 🟢 CLOSED | `[stellar]` `[missing]` | Stellar P2 |
-| ISS-024 | MATCH balance query not implemented | 🔴 OPEN | `[stellar]` `[missing]` | Stellar P2 |
+| ISS-024 | MATCH balance query not implemented | 🟢 CLOSED | `[stellar]` `[missing]` | Stellar P2 |
 | ISS-025 | Transaction history not implemented | 🔴 OPEN | `[stellar]` `[missing]` | Stellar P2 |
 | ISS-026 | Earn/spend event triggers not implemented | 🔴 OPEN | `[stellar]` `[missing]` `[firebase]` | Stellar P2 |
 | ISS-027 | Subscription smart contract not built | ⏸ PENDING | `[stellar]` `[missing]` | Stellar P3 |
