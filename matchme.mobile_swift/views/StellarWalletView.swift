@@ -60,6 +60,25 @@ struct StellarWalletView: View {
                         .foregroundStyle(.purple)
                 }
             }
+
+            // ISS-025 — link to transaction history
+            Divider()
+
+            NavigationLink {
+                TransactionHistoryView(publicKey: publicKey)
+            } label: {
+                HStack {
+                    Image(systemName: "list.bullet.rectangle")
+                        .foregroundStyle(.gradientDark)
+                    Text("Transaction History")
+                        .cuddleFont(size: 14, weight: .medium)
+                        .foregroundStyle(.primary)
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
         }
         .padding()
         .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))

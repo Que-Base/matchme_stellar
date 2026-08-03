@@ -245,6 +245,88 @@ actor StellarWalletService {
         }
     }
 
+    // MARK: - Transaction History (ISS-025)
+
+    /// Represents a single on-chain payment record for display in the history list.
+    struct PaymentRecord: Identifiable {
+        let id: String              // transaction hash
+        let amount: String          // formatted amount string
+        let assetCode: String       // "XLM" or "MATCH"
+        let direction: Direction    // sent or received
+        let counterparty: String    // the other account public key
+        let date: Date
+
+        enum Direction {
+            case sent
+            case received
+        }
+    }
+
+    /// Fetches on-chain payment history for the given public key from Horizon.
+    /// Returns up to `limit` records in descending chronological order.
+    ///
+    /// ISS-025 sub-tasks:
+    ///   - Fetch payments from Horizon `payments` endpoint
+    ///   - Map each operation into a `PaymentRecord`
+    ///   - Determine direction (sent vs received) from senderPublicKey
+    ///   - Handle both native XLM and MATCH credit asset payments
+    func transactionHistory(
+        for publicKey: String,
+        limit: Int = 20
+    ) async -> [PaymentRecord] {
+        // 1. Query Horizon payments endpoint for the account
+        guard let response = try? await sdk.payments.getPayments(
+            forAccount: publicKey,
+            from: nil,
+            order: Order.descending,
+            limit: limit,
+            includeFailed: false,
+            join: nil
+        ) else {
+            return []
+        }
+
+        // 2. Map each operation record to a PaymentRecord
+        var records: [PaymentRecord] = []
+
+        for record in response.records {
+            // 3. Only process payment operations (ignore account creation etc.)
+            guard let payment = record as? PaymentOperationResponse else { continue }
+
+            // 4. Determine direction
+            let direction: PaymentRecord.Direction = payment.sourceAccount == publicKey ? .sent : .received
+            let counterparty = direction == .sent ? payment.to : payment.from
+
+            // 5. Resolve asset code
+            let assetCode: String
+            if payment.assetType == AssetTypeAsString.NATIVE {
+                assetCode = "XLM"
+            } else {
+                assetCode = payment.assetCode ?? "UNKNOWN"
+            }
+
+            // 6. Parse date from created_at ISO8601 string
+            let date: Date
+            if let createdAt = payment.createdAt {
+                let formatter = ISO8601DateFormatter()
+                date = formatter.date(from: createdAt) ?? Date()
+            } else {
+                date = Date()
+            }
+
+            records.append(PaymentRecord(
+                id: payment.id ?? UUID().uuidString,
+                amount: payment.amount,
+                assetCode: assetCode,
+                direction: direction,
+                counterparty: counterparty,
+                date: date
+            ))
+        }
+
+        return records
+    }
+
     // MARK: - Balance
 
     /// Returns the XLM balance for the given public key, or nil if account not found.
