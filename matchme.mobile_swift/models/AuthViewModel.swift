@@ -39,7 +39,17 @@ enum AuthState {
             self.userSession = user
             self.authState = user != nil ? .authenticated : .notAuthenticated
             if user != nil {
-                Task { await self.fetchUser() }
+                Task {
+                    await self.fetchUser()
+                    // ISS-026e — trigger daily login reward after user is fetched
+                    if let user = self.currentUser,
+                       let publicKey = user.stellarPublicKey {
+                        await RewardService.shared.onDailyLogin(
+                            userID: user.id,
+                            publicKey: publicKey
+                        )
+                    }
+                }
             } else {
                 self.currentUser = nil
             }

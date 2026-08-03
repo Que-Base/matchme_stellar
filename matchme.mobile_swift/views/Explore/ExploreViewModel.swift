@@ -74,6 +74,7 @@ final class ExploreViewModel {
     func like(profile: ExploreProfile, currentUserID: String) {
         removeTopCard()
         // TODO: persist like, check for mutual match (ISS-008h)
+        // ISS-026d — trigger received-like reward for the target user (needs their public key)
     }
 
     /// ISS-008g — Stub. Persists a pass to Firestore and removes the card.
@@ -84,10 +85,20 @@ final class ExploreViewModel {
     }
 
     /// ISS-008e — Stub. Super like — same as like but flagged.
-    /// TODO: deduct 20 MATCH tokens (ISS-026f), write superLike flag.
-    func superLike(profile: ExploreProfile, currentUserID: String) {
+    /// ISS-026f — deducts 20 MATCH tokens via RewardService.
+    func superLike(profile: ExploreProfile, currentUserID: String, userPublicKey: String? = nil) {
         removeTopCard()
-        // TODO: persist super like, deduct MATCH tokens
+        // ISS-026f — charge user 20 MATCH for super like
+        if let publicKey = userPublicKey {
+            Task {
+                await RewardService.shared.onSuperLikeSent(
+                    userID: currentUserID,
+                    toUserID: profile.id,
+                    publicKey: publicKey
+                )
+            }
+        }
+        // TODO: persist super like to Firestore with superLike flag
     }
 
     // MARK: - Helpers
