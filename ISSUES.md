@@ -39,7 +39,7 @@
 |---|---|---|---|---|
 | Authentication | 0 | 0 | 0 | 7 |
 | Core Views (Stubs) | 0 | 0 | 0 | 4 |
-| Profile | 0 | 0 | 0 | 4 |
+| Profile | 2 | 0 | 0 | 4 |
 | Stellar — Phase 1 | 0 | 0 | 0 | 6 |
 | Stellar — Phase 2 | 2 | 0 | 0 | 3 |
 | Stellar — Phase 3 | 0 | 0 | 3 | 0 |
@@ -48,7 +48,8 @@
 | Architecture | 0 | 0 | 0 | 4 |
 | UI / UX | 0 | 0 | 0 | 4 |
 | Tech Debt | 0 | 0 | 0 | 5 |
-| **Total** | **2** | **0** | **7** | **41** |
+| Post-Audit (ISS-051–074) | 24 | 0 | 0 | 0 |
+| **Total** | **28** | **0** | **7** | **41** |
 
 ---
 
@@ -795,3 +796,360 @@ The file is named `cuddleProfileImage.swift` but contains `CuddleProfileInfoView
 | ISS-048 | `cuddleProfileImage.swift` misleading filename | 🟢 CLOSED | `[tech-debt]` | Tech Debt |
 | ISS-049 | `CuddleGraidientButton.swift` filename typo | 🟢 CLOSED | `[tech-debt]` | Tech Debt |
 | ISS-050 | `StellarWalletService` should be an actor | 🟢 CLOSED | `[tech-debt]` `[arch]` `[stellar]` | Tech Debt |
+
+---
+
+## Section 9 — Post-Audit Issues (ISS-051–074)
+
+> Identified via codebase audit on 2026-08-03. All issues filed on GitHub.
+
+---
+
+### ISS-051 · like() and pass() never write to Firestore
+**Status:** 🔴 OPEN
+**Tags:** `[stub]` `[missing]` `[blocking]` `[firebase]`
+**File:** `views/Explore/ExploreViewModel.swift`
+**Priority:** High
+
+Both `like()` and `pass()` only call `removeTopCard()`. Every swipe decision is lost on app restart and the mutual-match check is never triggered.
+
+**Breakdown:**
+- **ISS-051a** · Write like to `likes/{uid}/liked/{targetUID}` and `likes/{targetUID}/likedBy/{uid}`
+- **ISS-051b** · Write pass to `passes/{uid}/passed/{targetUID}`
+- **ISS-051c** · Implement `checkForMatch()` — create conversation on mutual like
+- **ISS-051d** · Wire `RewardService.onReceivedLike()` and `onMutualMatch()` after writes
+
+---
+
+### ISS-052 · fetchProfiles() excludes no already-seen UIDs
+**Status:** 🔴 OPEN
+**Tags:** `[stub]` `[missing]` `[firebase]`
+**File:** `views/Explore/ExploreViewModel.swift`
+**Priority:** High
+
+Query returns the same first 20 users without excluding liked/passed/matched UIDs. Users see the same profiles repeatedly. No pagination cursor.
+
+**Breakdown:**
+- **ISS-052a** · Fetch liked/passed UIDs before the profiles query and exclude them
+- **ISS-052b** · Add `DocumentSnapshot` cursor and use `startAfter()` for pagination
+- **ISS-052c** · Trigger re-fetch when profiles array is nearly empty (within 3 cards)
+
+---
+
+### ISS-053 · LikesViewModel.fetchLikes() is an unconditional empty stub
+**Status:** 🔴 OPEN
+**Tags:** `[stub]` `[missing]` `[blocking]` `[firebase]`
+**File:** `views/Likes/LikesViewModel.swift`
+**Priority:** High
+
+`fetchLikes()` sets `profiles = []` and returns immediately. The Likes tab is permanently empty for all users.
+
+**Breakdown:**
+- **ISS-053a** · Query `likes/{currentUID}/likedBy` subcollection
+- **ISS-053b** · Fetch `users/{uid}` for each result to build `LikedByProfile`
+- **ISS-053c** · Handle partial failures gracefully with `compactMap`
+
+---
+
+### ISS-054 · LikesViewModel likeBack() and pass() never write to Firestore
+**Status:** 🔴 OPEN
+**Tags:** `[stub]` `[missing]` `[firebase]`
+**File:** `views/Likes/LikesViewModel.swift`
+**Priority:** High
+
+Decisions are lost on next fetch. Match creation and reward triggers are missing.
+
+**Breakdown:**
+- **ISS-054a** · Write like-back to Firestore and delete from `likedBy` subcollection atomically
+- **ISS-054b** · Implement match creation (shared with `ExploreViewModel.checkForMatch()`)
+- **ISS-054c** · Persist pass to passes collection
+
+---
+
+### ISS-055 · All Chat methods are stubs — messaging is entirely non-functional
+**Status:** 🔴 OPEN
+**Tags:** `[stub]` `[missing]` `[blocking]` `[firebase]`
+**File:** `views/Chats/ChatViewModel.swift`
+**Priority:** High
+
+`fetchConversations()`, `fetchMessages()`, and `sendMessage()` all return empty or discard data without touching Firestore. No real-time listeners.
+
+**Breakdown:**
+- **ISS-055a** · Implement `fetchConversations()` with `whereField('participants', arrayContains:)`
+- **ISS-055b** · Implement `fetchMessages()` with ordered subcollection query
+- **ISS-055c** · Implement `sendMessage()` — write to messages subcollection and update `lastMessage`
+- **ISS-055d** · Replace one-shot queries with `addSnapshotListener`; store handles for cleanup
+
+---
+
+### ISS-056 · RewardService.distributeReward() sends payment from user to themselves
+**Status:** 🔴 OPEN
+**Tags:** `[bug]` `[stellar]` `[security]` `[blocking]`
+**File:** `models/RewardService.swift`
+**Priority:** High
+
+`distributeReward()` calls `sendPayment(to: publicKey)` where both sender and recipient are the current user. Architecturally wrong and broken on any account with a trustline. Must not reach production.
+
+**Breakdown:**
+- **ISS-056a** · On testnet: provision a funded reserve wallet and sign distributions from it
+- **ISS-056b** · On mainnet: replace body with a Cloud Function HTTP call signed server-side
+- **ISS-056c** · Add `#if DEBUG` / testnet build flag to gate the placeholder
+
+---
+
+### ISS-057 · MatchAssetConfig.defaultIssuerAccountId is a fake placeholder key
+**Status:** 🔴 OPEN
+**Tags:** `[bug]` `[stellar]` `[security]` `[blocking]`
+**File:** `models/StellarWalletService.swift`
+**Priority:** High
+
+`'GBMATCHMEISSUERACCOUNTXLMSTELLARPUBLICKEY1234567890123'` is not a valid Stellar public key. All MATCH token paths (trustline, balance, payment) will fail.
+
+**Breakdown:**
+- **ISS-057a** · Create a real testnet issuer account and fund via Friendbot
+- **ISS-057b** · Replace placeholder with real testnet issuer public key
+- **ISS-057c** · Store in config file or environment variable — not hardcoded in source
+
+---
+
+### ISS-058 · StellarWalletView is unreachable — SettingsView never passes publicKey
+**Status:** 🔴 OPEN
+**Tags:** `[bug]` `[stellar]` `[ui]` `[blocking]`
+**File:** `views/Settings/settingsView.swift`
+**Priority:** High
+
+`StellarWalletView` requires `publicKey: String` but SettingsView navigates to it without arguments — a compile-time error making the wallet screen inaccessible.
+
+**Breakdown:**
+- **ISS-058a** · Read `authViewModel.currentUser?.stellarPublicKey` and pass to `StellarWalletView`
+- **ISS-058b** · Handle nil case (no wallet yet) by showing a generate-wallet prompt
+
+---
+
+### ISS-059 · TransactionHistoryView NavigationLink may not work via SwiftfulRouting push
+**Status:** 🔴 OPEN
+**Tags:** `[missing]` `[stellar]` `[ux]`
+**File:** `views/StellarWalletView.swift`
+**Priority:** Medium
+
+The `NavigationLink` to `TransactionHistoryView` requires an active `NavigationStack`. When `StellarWalletView` is pushed via SwiftfulRouting from SettingsView, the link may be non-functional.
+
+**Breakdown:**
+- **ISS-059a** · Verify `NavigationLink` works when pushed via SwiftfulRouting
+- **ISS-059b** · Wrap `StellarWalletView` in `NavigationStack` or use `router.showScreen(.push)` for the history link
+
+---
+
+### ISS-060 · Firestore rules missing /rewardLog rule — de-duplication broken
+**Status:** 🔴 OPEN
+**Tags:** `[bug]` `[security]` `[firebase]` `[blocking]`
+**File:** `firestore.rules`
+**Priority:** High
+
+No `match /rewardLog/{docId}` rule exists. The catch-all deny means `alreadyRewarded()` always returns `false` and `recordReward()` silently fails — every reward can be triggered unlimited times.
+
+**Breakdown:**
+- **ISS-060a** · Add `/rewardLog/{docId}` rule allowing authenticated users to read their own entries
+- **ISS-060b** · Restrict writes to Cloud Functions service account
+- **ISS-060c** · Testnet interim: allow write if `request.auth.uid == request.resource.data.userID`
+
+---
+
+### ISS-061 · Settings notification and profile-visibility toggles not persisted
+**Status:** 🔴 OPEN
+**Tags:** `[stub]` `[ux]` `[firebase]`
+**File:** `views/Settings/settingsView.swift`
+**Priority:** Medium
+
+Both toggles are `@State` variables that reset on app launch with no Firestore or system integration.
+
+**Breakdown:**
+- **ISS-061a** · Wire notifications toggle to `UNUserNotificationCenter.requestAuthorization`
+- **ISS-061b** · Persist `profileVisible` to Firestore via `profileViewModel.updateField()`
+
+---
+
+### ISS-062 · Settings Terms and Privacy Policy rows still navigate nowhere
+**Status:** 🔴 OPEN
+**Tags:** `[stub]` `[ux]`
+**File:** `views/Settings/settingsView.swift`
+**Priority:** Medium
+
+Both rows have empty action closures — a legal compliance risk as app stores require accessible links to these documents.
+
+**Breakdown:**
+- **ISS-062a** · Reuse the `SafariView` wrapper from `OnboardingView` (ISS-044)
+- **ISS-062b** · Wire Terms and Privacy Policy rows to open respective URLs
+
+---
+
+### ISS-063 · ProfileView tab labels are hardcoded 'Tab 1' / 'Tab 2' placeholders
+**Status:** 🔴 OPEN
+**Tags:** `[stub]` `[ux]` `[ui]`
+**File:** `views/Profile/profileView.swift`
+**Priority:** Medium
+
+Placeholder strings "Tab 1", "Tab 2", and "Feature_1 name" are visible to end users. Second tab content duplicates the first.
+
+**Breakdown:**
+- **ISS-063a** · Replace tab labels with real names (e.g. 'About' / 'Premium')
+- **ISS-063b** · Replace `cuddleFeature` placeholders with real premium feature definitions
+- **ISS-063c** · Resolve content duplication between the two tabs
+
+---
+
+### ISS-064 · deleteAccount() partial failure leaves orphaned Firebase Auth record
+**Status:** 🔴 OPEN
+**Tags:** `[bug]` `[security]` `[firebase]`
+**File:** `models/AuthViewModel.swift`
+**Priority:** High
+
+Deletes Firestore document first, then Auth. If Auth deletion fails the user has an Auth account but no Firestore document. No re-authentication prompt before the sensitive operation.
+
+**Breakdown:**
+- **ISS-064a** · Reverse order: delete Auth first then Firestore — or use a Cloud Function for atomic cleanup
+- **ISS-064b** · Call `user.reauthenticate()` and surface a credential prompt on `requiresRecentLogin`
+- **ISS-064c** · Surface error to UI — `SettingsView` uses `try?` which swallows it silently
+
+---
+
+### ISS-065 · fetchUser() silently swallows errors — infinite loading state
+**Status:** 🔴 OPEN
+**Tags:** `[bug]` `[missing]` `[firebase]`
+**File:** `models/AuthViewModel.swift`
+**Priority:** Medium
+
+`try?` on both `getDocument()` and `data(as: User.self)` leaves `currentUser` nil with no feedback. `ContentView` stays on `CuddleLoadingView` indefinitely.
+
+**Breakdown:**
+- **ISS-065a** · Propagate error from `fetchUser()` and set `errorMessage` for a retry prompt
+- **ISS-065b** · Add maximum retry count or timeout to escape infinite loading
+
+---
+
+### ISS-066 · Stellar wallet creation failure silently ignored in createUser()
+**Status:** 🔴 OPEN
+**Tags:** `[missing]` `[stellar]` `[ux]`
+**File:** `models/AuthViewModel.swift`
+**Priority:** Medium
+
+`getOrCreateKeypair()` and `fundTestnetAccount()` both use `try?`. Failure leaves `stellarPublicKey` nil in Firestore with no user feedback and no retry path.
+
+**Breakdown:**
+- **ISS-066a** · Separate auth-critical from wallet-critical errors in `createUser()`
+- **ISS-066b** · Show recoverable banner with 'Retry wallet setup' action
+- **ISS-066c** · Add wallet repair entry point in Settings for users with nil `stellarPublicKey`
+
+---
+
+### ISS-067 · signOut() error silently swallowed — ambiguous auth state
+**Status:** 🔴 OPEN
+**Tags:** `[missing]` `[ux]`
+**File:** `models/AuthViewModel.swift`
+**Priority:** Low
+
+`catch` block only calls `print()`. On failure the app stays authenticated with no user feedback.
+
+**Breakdown:**
+- **ISS-067a** · Set `errorMessage` on failure and surface in `SettingsView`
+- **ISS-067b** · Force-clear local state even when Firebase call fails
+
+---
+
+### ISS-068 · getOrCreateKeypair() Keychain failure silently ignored in createUser()
+**Status:** 🔴 OPEN
+**Tags:** `[bug]` `[arch]` `[stellar]`
+**File:** `models/AuthViewModel.swift`
+**Priority:** Medium
+
+`try?` wrapper discards specific Keychain error codes (e.g. `errSecDuplicateItem` race) with no diagnostics.
+
+**Breakdown:**
+- **ISS-068a** · Make `getOrCreateKeypair()` `async throws` to make actor boundary explicit
+- **ISS-068b** · Replace `try?` with `do/catch` that logs or surfaces the specific Keychain error
+
+---
+
+### ISS-069 · StellarWalletServiceTests.tearDown() has a fire-and-forget Task race condition
+**Status:** 🔴 OPEN
+**Tags:** `[bug]` `[tech-debt]`
+**File:** `matchme.mobile_swiftTests/StellarWalletServiceTests.swift`
+**Priority:** Medium
+
+`Task { await service.clearKeypair() }` returns immediately — the async Keychain delete may not complete before the next test starts, causing non-deterministic results.
+
+**Breakdown:**
+- [ ] Change `tearDown()` to `override func tearDown() async` and call `await service.clearKeypair()` directly
+
+---
+
+### ISS-070 · No tests for RewardService event processing or de-duplication
+**Status:** 🔴 OPEN
+**Tags:** `[missing]` `[tech-debt]` `[stellar]`
+**File:** `matchme.mobile_swiftTests/`
+**Priority:** Medium
+
+`RewardService` is the most complex business-logic class in the project and has zero test coverage.
+
+**Breakdown:**
+- **ISS-070a** · Add `RewardServiceTests.swift` — `deduplicationKey()` for all `RewardEvent` cases
+- **ISS-070b** · Test signed `matchDelta` values for all earn and spend events
+- **ISS-070c** · Integration test for `alreadyRewarded()` guard (Firestore emulator or mock)
+
+---
+
+### ISS-071 · No tests for ExploreViewModel, LikesViewModel, or ChatViewModel
+**Status:** 🔴 OPEN
+**Tags:** `[missing]` `[tech-debt]`
+**File:** `matchme.mobile_swiftTests/`
+**Priority:** Medium
+
+All three core feature ViewModels have zero test coverage.
+
+**Breakdown:**
+- **ISS-071a** · Add `ExploreViewModelTests` — `removeTopCard()`, profile filtering, error states
+- **ISS-071b** · Add `LikesViewModelTests` — `likeBack()` / `pass()` state mutations
+- **ISS-071c** · Add `ChatViewModelTests` — `sendMessage()` guard, `isLoading` transitions
+
+---
+
+### ISS-072 · ProfileViewModel.updateProfile() is never called — profile edits not persisted
+**Status:** 🔴 OPEN
+**Tags:** `[missing]` `[firebase]`
+**File:** `views/Profile/profileView.swift`
+**Priority:** High
+
+`updateProfile()` is fully implemented but no view calls it. `profileView.swift` is read-only with no edit/save flow.
+
+**Breakdown:**
+- **ISS-072a** · Add edit mode to `ProfileView` or create a `ProfileEditView`
+- **ISS-072b** · Call `vm.updateProfile()` on save and handle errors with alert or banner
+- **ISS-072c** · Wire `RewardService.onProfileCompleted()` when bio and photo are both non-empty
+
+---
+
+### ISS-073 · ExploreCardView photo loading has no failure/loading state distinction
+**Status:** 🔴 OPEN
+**Tags:** `[ux]` `[ui]`
+**File:** `views/Explore/ExploreCardView.swift`
+**Priority:** Low
+
+`.empty` (loading) and `.failure` (broken URL) both show the same gradient placeholder. No retry mechanism for transient failures.
+
+**Breakdown:**
+- **ISS-073a** · Add `.failure` case with a distinct broken-image indicator or retry button
+- **ISS-073b** · Add `.empty` case with shimmer animation from `CuddleLoadingView.swift`
+
+---
+
+### ISS-074 · StellarWalletView shows 'Loading...' permanently on Horizon fetch failure
+**Status:** 🔴 OPEN
+**Tags:** `[ux]` `[missing]` `[stellar]`
+**File:** `views/StellarWalletView.swift`
+**Priority:** Medium
+
+Balance strings initialised as `'Loading...'` stay that way on network failure. No error state or retry button.
+
+**Breakdown:**
+- **ISS-074a** · Replace raw `String` state with a `LoadState` enum (`.loading`, `.loaded`, `.failed`)
+- **ISS-074b** · Show 'Failed to load — tap to retry' and wire a retry action
