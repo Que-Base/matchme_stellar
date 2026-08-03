@@ -76,5 +76,6 @@ bash scripts/test.sh
 ## 🏷 PR & Issue Hygiene
 
 - **Scope PRs to a single issue**: Reference the target `ISS-xxx` ID in your PR title and description.
+- **Check the dependency graph before starting**: See [ISSUE_DEPENDENCY_GRAPH.md](ISSUE_DEPENDENCY_GRAPH.md) to confirm the issue you want to work on is not blocked by an open upstream issue.
 - **Verify test coverage**: Add XCTest coverage under `matchme.mobile_swiftTests/` for any new ViewModels or service methods.
 - **No unrelated changes**: Keep formatting and refactoring strictly relevant to the task at hand.

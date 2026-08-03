@@ -35,6 +35,7 @@ Please review our [Security Policy](SECURITY.md) for information on reporting vu
 ### Architecture & Standards
 
 - **[Contributing Guide](CONTRIBUTING.md)** - Code conventions, repository layout, and pre-PR verification guidelines.
+- **[Issue Dependency Graph](ISSUE_DEPENDENCY_GRAPH.md)** - Ordered execution flow showing which issues block others.
 - **[Stellar Architecture Guide](STELLAR_ARCHITECTURE.md)** - Keypair generation, iOS Keychain access rules, and Horizon integration details.
 - **[Stellar Roadmap](STELLAR_ROADMAP.md)** - Multi-phase breakdown for tokens, smart contracts, and identity.
 - **[Issue Tracker](ISSUES.md)** - Master issue index and milestone tracking.
