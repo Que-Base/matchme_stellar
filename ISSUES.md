@@ -1,6 +1,6 @@
 # MatchMe Stellar — Issue Tracker
 
-> **Last updated:** 2026-07-24
+> **Last updated:** 2026-08-03
 > **Repo:** https://github.com/Que-Base/matchme_stellar
 > **Project:** MatchMe iOS (Swift / SwiftUI / Firebase / Stellar)
 
@@ -41,14 +41,14 @@
 | Core Views (Stubs) | 0 | 0 | 0 | 4 |
 | Profile | 0 | 0 | 0 | 4 |
 | Stellar — Phase 1 | 0 | 0 | 0 | 6 |
-| Stellar — Phase 2 | 5 | 0 | 0 | 0 |
+| Stellar — Phase 2 | 2 | 0 | 0 | 3 |
 | Stellar — Phase 3 | 0 | 0 | 3 | 0 |
 | Stellar — Phase 4/5 | 0 | 0 | 4 | 0 |
 | Security | 0 | 0 | 0 | 4 |
 | Architecture | 0 | 0 | 0 | 4 |
 | UI / UX | 0 | 0 | 0 | 4 |
 | Tech Debt | 0 | 0 | 0 | 5 |
-| **Total** | **5** | **0** | **7** | **38** |
+| **Total** | **2** | **0** | **7** | **41** |
 
 ---
 
@@ -306,7 +306,7 @@ The "Complete my profile" button renders when `profileSetupCompletion < 1.0` but
 ### Phase 1 — Wallet & Identity
 
 #### ISS-016 · StellarWalletView is never surfaced in the app UI
-**Status:** 🔴 OPEN  
+**Status:** 🟢 CLOSED — navigation wired in PR #53 (`fix/iss-011-settings-view-stubs`); Stellar Wallet row in SettingsView pushes StellarWalletView via router  
 **Tags:** `[missing]` `[stellar]` `[ux]`  
 **File:** `views/StellarWalletView.swift`
 
@@ -716,7 +716,7 @@ The file is named `cuddleProfileImage.swift` but contains `CuddleProfileInfoView
 ---
 
 ### ISS-049 · `CuddleGraidientButton.swift` filename has a typo
-**Status:** 🔴 OPEN  
+**Status:** 🟢 CLOSED — renamed to `CuddleGradientButton.swift` in PR #64 (`fix/iss-048-049-filename-renames`)  
 **Tags:** `[tech-debt]`  
 **File:** `views/reusable_views/CuddleGraidientButton.swift`
 
@@ -760,7 +760,7 @@ The file is named `cuddleProfileImage.swift` but contains `CuddleProfileInfoView
 | ISS-013 | Profile photos are mocked, no upload | 🔴 OPEN | `[stub]` `[missing]` `[firebase]` | Profile |
 | ISS-014 | Profile setup disconnected from auth flow | 🔴 OPEN | `[arch]` `[ux]` `[stub]` | Profile |
 | ISS-015 | "Complete my profile" button no-op | 🔴 OPEN | `[stub]` `[ux]` | Profile |
-| ISS-016 | StellarWalletView never surfaced in UI | 🔴 OPEN | `[missing]` `[stellar]` `[ux]` | Stellar P1 |
+| ISS-016 | StellarWalletView never surfaced in UI | 🟢 CLOSED | `[missing]` `[stellar]` `[ux]` | Stellar P1 |
 | ISS-017 | Keypair generation at signup | 🟢 CLOSED | `[stellar]` | Stellar P1 |
 | ISS-018 | Keychain secret seed storage | 🟢 CLOSED | `[stellar]` `[security]` | Stellar P1 |
 | ISS-019 | Testnet Friendbot funding | 🟢 CLOSED | `[stellar]` | Stellar P1 |
