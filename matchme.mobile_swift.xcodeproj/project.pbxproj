@@ -62,6 +62,7 @@
 		08FBA6382C84F89200E426D0 /* profilePhotosView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 08FBA6372C84F89100E426D0 /* profilePhotosView.swift */; };
 		AA000012AA000012AA000012 /* StellarWalletService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000010AA000010AA000010 /* StellarWalletService.swift */; };
 		AA000013AA000013AA000013 /* StellarWalletView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000011AA000011AA000011 /* StellarWalletView.swift */; };
+		AA000057AA000057AA000057 /* StellarConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000057AA000057AA000056 /* StellarConfig.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -114,6 +115,7 @@
 		08FBA6372C84F89100E426D0 /* profilePhotosView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = profilePhotosView.swift; sourceTree = "<group>"; };
 		AA000010AA000010AA000010 /* StellarWalletService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StellarWalletService.swift; sourceTree = "<group>"; };
 		AA000011AA000011AA000011 /* StellarWalletView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StellarWalletView.swift; sourceTree = "<group>"; };
+		AA000057AA000057AA000056 /* StellarConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Config/StellarConfig.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -194,6 +196,7 @@
 				08FBA6332C84B01A00E426D0 /* GoogleService-Info.plist */,
 				08391D3C2C747FF100D66796 /* matchme_mobile_swiftApp.swift */,
 				08391D3E2C747FF100D66796 /* ContentView.swift */,
+				AA000057AA000057AA000055 /* Config */,
 				0865524C2C82674500FE47D2 /* models */,
 				086552432C82384800FE47D2 /* views */,
 				08EDA28A2C7FF8BA0057F3CA /* Profile_creation */,
@@ -248,6 +251,14 @@
 				086552622C83945A00FE47D2 /* Explore */,
 			);
 			path = views;
+			sourceTree = "<group>";
+		};
+		AA000057AA000057AA000055 /* Config */ = {
+			isa = PBXGroup;
+			children = (
+				AA000057AA000057AA000056 /* StellarConfig.swift */,
+			);
+			path = Config;
 			sourceTree = "<group>";
 		};
 		0865524C2C82674500FE47D2 /* models */ = {
@@ -472,6 +483,7 @@
 				086552492C8238F200FE47D2 /* likeView.swift in Sources */,
 				AA000012AA000012AA000012 /* StellarWalletService.swift in Sources */,
 				AA000013AA000013AA000013 /* StellarWalletView.swift in Sources */,
+				AA000057AA000057AA000057 /* StellarConfig.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

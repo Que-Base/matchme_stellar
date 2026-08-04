@@ -898,17 +898,17 @@ Decisions are lost on next fetch. Match creation and reward triggers are missing
 ---
 
 ### ISS-057 · MatchAssetConfig.defaultIssuerAccountId is a fake placeholder key
-**Status:** 🔴 OPEN
+**Status:** 🟢 CLOSED — implemented in branch `fix/iss-057-match-issuer-key`; real testnet issuer key (`GDW6CBZZS7NLC5LTXGWTBBEUIRMEFBWBNT6NLU7ZXG24MMJMLZILSSXZ`) configured in `Config/StellarConfig.swift`
 **Tags:** `[bug]` `[stellar]` `[security]` `[blocking]`
 **File:** `models/StellarWalletService.swift`
 **Priority:** High
 
-`'GBMATCHMEISSUERACCOUNTXLMSTELLARPUBLICKEY1234567890123'` is not a valid Stellar public key. All MATCH token paths (trustline, balance, payment) will fail.
+`'GBMATCHMEISSUERACCOUNTXLMSTELLARPUBLICKEY1234567890123'` was not a valid Stellar public key. Replaced with real testnet issuer key.
 
 **Breakdown:**
-- **ISS-057a** · Create a real testnet issuer account and fund via Friendbot
+- **ISS-057a** · Create a real testnet issuer account and fund via Friendbot (done, key: `GDW6CBZZS7NLC5LTXGWTBBEUIRMEFBWBNT6NLU7ZXG24MMJMLZILSSXZ`)
 - **ISS-057b** · Replace placeholder with real testnet issuer public key
-- **ISS-057c** · Store in config file or environment variable — not hardcoded in source
+- **ISS-057c** · Store in config file or environment variable — centralized in `Config/StellarConfig.swift`
 
 ---
 
