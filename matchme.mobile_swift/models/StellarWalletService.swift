@@ -9,14 +9,25 @@
 
 import Foundation
 import Security
-// MARK: - MATCH Asset Configuration (ISS-022a)
+// MARK: - MATCH Asset Configuration (ISS-022a / ISS-057)
+//
+// Testnet issuer account created 2026-08-04.
+// Funded via Friendbot: tx b3e5a85dc7cf755a2d5401802038b85a471fad6bdd3500e8540e10c480596fcb
+// Horizon: https://horizon-testnet.stellar.org/accounts/GDW6CBZZS7NLC5LTXGWTBBEUIRMEFBWBNT6NLU7ZXG24MMJMLZILSSXZ
+//
+// IMPORTANT — mainnet migration (ISS-030):
+//   Replace with production issuer key via build configuration.
+//   The issuer secret seed must NEVER be stored in the app — distributions
+//   must be signed by a Cloud Function (server-side) on mainnet.
 
 public struct MatchAssetConfig {
-    /// Asset code for the MatchMe protocol token
-    public static let code = "MATCH"
-    
-    /// Default testnet issuer account public key for MATCH tokens
-    public static let defaultIssuerAccountId = "GBMATCHMEISSUERACCOUNTXLMSTELLARPUBLICKEY1234567890123"
+    /// Asset code for the MatchMe protocol token.
+    public static var code: String { StellarConfig.matchAssetCode }
+
+    /// Testnet issuer account public key for MATCH tokens.
+    /// ISS-057: replaced fake placeholder with a real funded testnet account in StellarConfig.
+    /// ISS-030: swap this for the production issuer key behind a build flag before mainnet.
+    public static var defaultIssuerAccountId: String { StellarConfig.matchIssuerPublicKey }
 }
 
 // MARK: - Stellar Wallet Errors
