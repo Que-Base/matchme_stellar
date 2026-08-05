@@ -122,6 +122,21 @@ service cloud.firestore {
     }
 
     // ─────────────────────────────────────────────
+    // /rewardLog/{docId}
+    // De-duplication log for MATCH token rewards (ISS-060)
+    // ─────────────────────────────────────────────
+    match /rewardLog/{docId} {
+      // Authenticated users can read reward log entries (or check non-existent docs for deduplication)
+      allow read: if isAuthenticated() && (resource == null || resource.data.userID == request.auth.uid);
+
+      // Authenticated users can record rewards for their own userID
+      allow create: if isAuthenticated() && request.resource.data.userID == request.auth.uid;
+
+      // Reward log entries are immutable once recorded
+      allow update, delete: if false;
+    }
+
+    // ─────────────────────────────────────────────
     // Deny everything else by default
     // ─────────────────────────────────────────────
     match /{document=**} {

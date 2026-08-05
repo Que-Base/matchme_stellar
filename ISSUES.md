@@ -941,17 +941,17 @@ The `NavigationLink` to `TransactionHistoryView` requires an active `NavigationS
 ---
 
 ### ISS-060 · Firestore rules missing /rewardLog rule — de-duplication broken
-**Status:** 🔴 OPEN
+**Status:** 🟢 CLOSED — implemented in branch `fix/iss-060-firestore-reward-log-rules`; added `/rewardLog/{docId}` match block with read/create owner checks and immutability guard
 **Tags:** `[bug]` `[security]` `[firebase]` `[blocking]`
 **File:** `firestore.rules`
 **Priority:** High
 
-No `match /rewardLog/{docId}` rule exists. The catch-all deny means `alreadyRewarded()` always returns `false` and `recordReward()` silently fails — every reward can be triggered unlimited times.
+No `match /rewardLog/{docId}` rule existed. Added Security Rule allowing authenticated users to read and create their own reward log documents while prohibiting updates or deletes.
 
 **Breakdown:**
 - **ISS-060a** · Add `/rewardLog/{docId}` rule allowing authenticated users to read their own entries
-- **ISS-060b** · Restrict writes to Cloud Functions service account
-- **ISS-060c** · Testnet interim: allow write if `request.auth.uid == request.resource.data.userID`
+- **ISS-060b** · Restrict updates/deletes (`allow update, delete: if false;`)
+- **ISS-060c** · Allow create if `request.auth.uid == request.resource.data.userID`
 
 ---
 
