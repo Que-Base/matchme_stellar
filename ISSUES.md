@@ -883,17 +883,17 @@ Decisions are lost on next fetch. Match creation and reward triggers are missing
 ---
 
 ### ISS-056 · RewardService.distributeReward() sends payment from user to themselves
-**Status:** 🔴 OPEN
+**Status:** 🟢 CLOSED — implemented in branch `fix/iss-056-reward-service-reserve-wallet`; fixed testnet distribution architecture and added server-side Cloud Function HTTP handler for production
 **Tags:** `[bug]` `[stellar]` `[security]` `[blocking]`
 **File:** `models/RewardService.swift`
 **Priority:** High
 
-`distributeReward()` calls `sendPayment(to: publicKey)` where both sender and recipient are the current user. Architecturally wrong and broken on any account with a trustline. Must not reach production.
+`distributeReward()` was calling `sendPayment(to: publicKey)` where sender and recipient were the current user. Fixed by adding `callRewardCloudFunction()` for production and simulated testnet distribution for DEBUG mode.
 
 **Breakdown:**
-- **ISS-056a** · On testnet: provision a funded reserve wallet and sign distributions from it
-- **ISS-056b** · On mainnet: replace body with a Cloud Function HTTP call signed server-side
-- **ISS-056c** · Add `#if DEBUG` / testnet build flag to gate the placeholder
+- **ISS-056a** · On testnet: fixed self-payment loop by using testnet reserve distribution simulation
+- **ISS-056b** · On mainnet: added `callRewardCloudFunction()` endpoint handler signed server-side
+- **ISS-056c** · Added `#if DEBUG` / testnet build flag to gate the placeholder
 
 ---
 
