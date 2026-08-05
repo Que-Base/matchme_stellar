@@ -217,26 +217,60 @@ final class RewardService {
         ])
     }
 
-    /// Stub for testnet: distributes MATCH from the reserve wallet to the user.
+    /// Distributes MATCH from the reserve wallet to the user (ISS-056).
     ///
-    /// TODO (mainnet, ISS-026g): Replace with a Cloud Function call:
-    ///   `POST /distributeReward { to: publicKey, amount: amount, memo: memo }`
-    ///   The Cloud Function signs with the reserve wallet secret server-side.
+    /// - On mainnet: Executes a POST request to `StellarConfig.rewardDistributionURL`
+    ///   where the transaction is signed server-side by a Cloud Function.
+    /// - On testnet / DEBUG: Calls the Cloud Function if configured, or generates a
+    ///   simulated testnet transaction reference so the user does not pay themselves.
     private func distributeReward(to publicKey: String, amount: Decimal, memo: String) async throws -> String {
-        // On testnet we use sendPayment from the user's own account as a placeholder.
-        // This is only valid for testnet demonstration purposes.
-        return try await StellarWalletService.shared.sendPayment(
-            to: publicKey,
-            assetCode: MatchAssetConfig.code,
-            amount: amount,
-            memoText: String(memo.prefix(28)) // Stellar memo max 28 bytes
-        )
+        #if DEBUG
+        if let cloudFunctionURL = StellarConfig.rewardDistributionURL {
+            return try await callRewardCloudFunction(to: publicKey, amount: amount, memo: memo, url: cloudFunctionURL)
+        } else {
+            // Testnet simulation placeholder (ISS-056a/c):
+            // Prevents invalid self-payment transactions while reserve Cloud Function is offline on testnet.
+            let simulatedTxHash = "testnet_dist_\(UUID().uuidString.replacingOccurrences(of: "-", with: "").prefix(24))"
+            print("RewardService (DEBUG testnet): Distributed \(amount) MATCH to \(publicKey) [memo: \(memo), tx: \(simulatedTxHash)]")
+            return simulatedTxHash
+        }
+        #else
+        guard let cloudFunctionURL = StellarConfig.rewardDistributionURL else {
+            throw StellarWalletServiceError.trustlineCreationFailed("Production reward distribution Cloud Function URL is not configured.")
+        }
+        return try await callRewardCloudFunction(to: publicKey, amount: amount, memo: memo, url: cloudFunctionURL)
+        #endif
+    }
+
+    /// Helper for server-side signed reward distributions (ISS-056b).
+    private func callRewardCloudFunction(to publicKey: String, amount: Decimal, memo: String, url: URL) async throws -> String {
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+
+        let payload: [String: Any] = [
+            "to": publicKey,
+            "amount": "\(amount)",
+            "memo": String(memo.prefix(28))
+        ]
+        request.httpBody = try JSONSerialization.data(withJSONObject: payload)
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+        guard let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) else {
+            throw StellarWalletServiceError.trustlineCreationFailed("Cloud Function reward distribution HTTP request failed")
+        }
+
+        if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+           let txHash = json["txHash"] as? String {
+            return txHash
+        }
+        throw StellarWalletServiceError.trustlineCreationFailed("Invalid JSON response from reward Cloud Function")
     }
 
     /// Charges the user's wallet by sending MATCH to the reserve wallet.
     private func chargeUser(publicKey: String, amount: Decimal, memo: String) async throws -> String {
         return try await StellarWalletService.shared.sendPayment(
-            to: MatchAssetConfig.defaultIssuerAccountId,
+            to: StellarConfig.reserveWalletPublicKey,
             assetCode: MatchAssetConfig.code,
             amount: amount,
             memoText: String(memo.prefix(28))

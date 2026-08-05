@@ -72,4 +72,17 @@ struct StellarConfig {
         case .mainnet:  return nil // No Friendbot on mainnet
         }
     }
+
+    // MARK: - Cloud Functions (ISS-056)
+
+    /// HTTP endpoint URL for server-side MATCH reward distribution.
+    /// In production (mainnet), distribution transactions must be signed server-side.
+    static var rewardDistributionURL: URL? {
+        switch current {
+        case .testnet:
+            return nil // Optional: set to testnet Cloud Function URL when deployed
+        case .mainnet:
+            return nil // TODO (ISS-056b): configure mainnet Cloud Function endpoint
+        }
+    }
 }
