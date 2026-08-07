@@ -14,9 +14,13 @@ struct ContentView: View {
                 case .authenticated:
                     if authViewModel.currentUser != nil {
                         DashboardView()
+                    } else if authViewModel.fetchUserFailed {
+                        // ISS-065 — fetchUser exhausted retries; show retry prompt
+                        // instead of spinning indefinitely.
+                        FetchUserFailedView {
+                            Task { await authViewModel.retryFetchUser() }
+                        }
                     } else {
-                        // Authenticated but user document still loading —
-                        // stay on the loading screen until fetchUser() fills it.
                         CuddleLoadingView(message: "Setting up your profile…")
                     }
                 case .notAuthenticated:

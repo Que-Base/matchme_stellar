@@ -27,8 +27,14 @@ enum AuthState {
     /// ISS-039 — true while fetchUser() or createUser() is in-flight.
     var isLoading: Bool = false
 
+    /// ISS-065 — true when fetchUser has failed after all retries.
+    /// ContentView observes this to show a retry prompt instead of
+    /// staying on CuddleLoadingView indefinitely.
+    var fetchUserFailed: Bool = false
+
     // Retain the listener handle so it is not immediately deallocated
     private var authStateListenerHandle: AuthStateDidChangeListenerHandle?
+    private let maxFetchRetries = 3
 
     func startUp() {
         listenToAuthStateChanges()
@@ -145,15 +151,39 @@ enum AuthState {
         guard let uid = Auth.auth().currentUser?.uid else { return }
 
         isLoading = true
+        fetchUserFailed = false
         defer { isLoading = false }
 
-        guard let snapshot = try? await Firestore
-            .firestore()
-            .collection("users")
-            .document(uid)
-            .getDocument()
-        else { return }
+        // ISS-065: retry up to maxFetchRetries times with exponential back-off
+        // before giving up and setting fetchUserFailed = true so ContentView
+        // can show a retry prompt instead of spinning indefinitely.
+        for attempt in 1...maxFetchRetries {
+            do {
+                let snapshot = try await Firestore.firestore()
+                    .collection("users")
+                    .document(uid)
+                    .getDocument()
 
-        self.currentUser = try? snapshot.data(as: User.self)
+                self.currentUser = try snapshot.data(as: User.self)
+                return // success — exit the retry loop
+
+            } catch {
+                if attempt == maxFetchRetries {
+                    // All retries exhausted
+                    self.errorMessage = "Failed to load your profile. Tap retry."
+                    self.fetchUserFailed = true
+                } else {
+                    // Brief back-off before next attempt (1s, 2s)
+                    try? await Task.sleep(nanoseconds: UInt64(attempt) * 1_000_000_000)
+                }
+            }
+        }
+    }
+
+    /// ISS-065: called by ContentView's retry button.
+    func retryFetchUser() async {
+        fetchUserFailed = false
+        errorMessage = nil
+        await fetchUser()
     }
 }
