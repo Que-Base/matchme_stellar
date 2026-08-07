@@ -23,6 +23,8 @@ struct SettingsView: View {
     @State private var showSignOutAlert = false
     /// Controls the delete account confirmation alert
     @State private var showDeleteAlert = false
+    /// ISS-058 — shown when user has no Stellar wallet yet
+    @State private var showNoWalletAlert = false
     /// ISS-011c — notification toggle (stub, not yet wired to UNUserNotificationCenter)
     @State private var notificationsEnabled = true
     /// ISS-011d — profile visibility toggle (stub, not yet persisted to Firestore)
@@ -40,12 +42,16 @@ struct SettingsView: View {
                         // TODO: wire to OAuth flow
                     }
 
-                    // ISS-011f — Stellar Wallet
-                    SettingsRow(icon: "wallet.pass", label: "Stellar Wallet") {
+                // ISS-058 — pass stellarPublicKey from currentUser; handle nil (no wallet yet)
+                SettingsRow(icon: "wallet.pass", label: "Stellar Wallet") {
+                    if let publicKey = authViewModel.currentUser?.stellarPublicKey {
                         router.showScreen(.push) { _ in
-                            StellarWalletView()
+                            StellarWalletView(publicKey: publicKey)
                         }
+                    } else {
+                        showNoWalletAlert = true
                     }
+                }
                 }
 
                 // MARK: Privacy
@@ -134,6 +140,13 @@ struct SettingsView: View {
                 Button("Cancel", role: .cancel) {}
             } message: {
                 Text("This is permanent. Your profile, matches, and Stellar wallet will be removed from this device. This cannot be undone.")
+            }
+
+            // MARK: No wallet alert (ISS-058)
+            .alert("No Stellar Wallet", isPresented: $showNoWalletAlert) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                Text("Your account doesn't have a Stellar wallet yet. Try signing out and signing back in to generate one, or contact support.")
             }
         }
         .padding(.horizontal, 0)
