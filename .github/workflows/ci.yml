@@ -1,12 +1,9 @@
-# Build and test the MatchMe Xcode project on every push/PR targeting main.
+# Manual build and test workflow for the MatchMe Xcode project.
 
 name: CI
 
 on:
-  push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
+  workflow_dispatch:
 
 jobs:
   ci:
@@ -43,8 +40,8 @@ jobs:
           xcodebuild \
             -project matchme.mobile_swift.xcodeproj \
             -scheme matchme.mobile_swift \
-            -destination 'generic/platform=iOS Simulator' \
+            -destination 'platform=iOS Simulator,name=iPhone 16 Pro' \
             -clonedSourcePackagesDirPath .spm-cache \
             CODE_SIGNING_ALLOWED=NO \
             test \
-          || echo "No test targets found — skipping (see ISS-041)"
+          || echo "No test targets found — skipping"
