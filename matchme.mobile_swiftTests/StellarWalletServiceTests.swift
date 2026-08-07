@@ -13,10 +13,10 @@ final class StellarWalletServiceTests: XCTestCase {
 
     let service = StellarWalletService.shared
 
-    override func tearDown() {
+    override func tearDown() async throws {
         // Clean up any keypair written during tests
-        Task { await service.clearKeypair() }
-        super.tearDown()
+        await service.clearKeypair()
+        try await super.tearDown()
     }
 
     // MARK: - Keypair generation
