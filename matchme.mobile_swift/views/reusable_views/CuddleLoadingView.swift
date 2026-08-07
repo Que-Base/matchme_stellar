@@ -89,3 +89,36 @@ struct ExploreCardSkeleton: View {
             .shadow(color: .black.opacity(0.08), radius: 8, x: 0, y: 4)
     }
 }
+
+// MARK: - Fetch user failed / retry prompt (ISS-065)
+
+/// Shown in ContentView when fetchUser() has exhausted all retries.
+/// Prevents the user being stuck on an infinite loading screen.
+struct FetchUserFailedView: View {
+    let onRetry: () -> Void
+
+    var body: some View {
+        VStack(spacing: 20) {
+            Image(systemName: "wifi.slash")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 56)
+                .foregroundStyle(.gradientDark.opacity(0.5))
+
+            Text("Couldn't load your profile")
+                .cuddleFont(size: 20, weight: .bold)
+
+            Text("Check your connection and try again.")
+                .cuddleFont(size: 14, weight: .regular)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+
+            CuddleGradientButton(label: "Retry", onCall: onRetry)
+                .padding(.horizontal, 40)
+                .padding(.top, 4)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(.white)
+        .padding(32)
+    }
+}
