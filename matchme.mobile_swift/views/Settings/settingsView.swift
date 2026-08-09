@@ -23,6 +23,10 @@ struct SettingsView: View {
     @State private var showSignOutAlert = false
     /// Controls the delete account confirmation alert
     @State private var showDeleteAlert = false
+    /// ISS-064c — error message when account deletion fails
+    @State private var deleteError: String? = nil
+    /// ISS-064c — controls account deletion failure alert
+    @State private var showDeleteErrorAlert = false
     /// ISS-058 — shown when user has no Stellar wallet yet
     @State private var showNoWalletAlert = false
     /// ISS-011c — notification toggle (stub, not yet wired to UNUserNotificationCenter)
@@ -135,11 +139,25 @@ struct SettingsView: View {
             // MARK: Delete account alert
             .alert("Delete account?", isPresented: $showDeleteAlert) {
                 Button("Delete", role: .destructive) {
-                    Task { try? await authViewModel.deleteAccount() }
+                    Task {
+                        do {
+                            try await authViewModel.deleteAccount()
+                        } catch {
+                            deleteError = error.localizedDescription
+                            showDeleteErrorAlert = true
+                        }
+                    }
                 }
                 Button("Cancel", role: .cancel) {}
             } message: {
                 Text("This is permanent. Your profile, matches, and Stellar wallet will be removed from this device. This cannot be undone.")
+            }
+
+            // MARK: Delete error alert (ISS-064c)
+            .alert("Account Deletion Failed", isPresented: $showDeleteErrorAlert) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                Text(deleteError ?? "An error occurred while deleting your account. If you signed in a long time ago, please sign out and sign back in before trying again.")
             }
 
             // MARK: No wallet alert (ISS-058)
