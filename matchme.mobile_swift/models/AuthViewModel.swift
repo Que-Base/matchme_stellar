@@ -122,17 +122,20 @@ enum AuthState {
 
     func deleteAccount() async throws {
         guard let user = Auth.auth().currentUser else { return }
+        let userUID = user.uid
 
         do {
-            // Delete Firestore user document first
-            try await Firestore
+            // Delete the Firebase Auth account FIRST (ISS-064a)
+            // If this fails (e.g. requiresRecentLogin), the Firestore document remains intact
+            // and no orphaned Auth record is left.
+            try await user.delete()
+
+            // Delete Firestore user document second
+            try? await Firestore
                 .firestore()
                 .collection("users")
-                .document(user.uid)
+                .document(userUID)
                 .delete()
-
-            // Delete the Firebase Auth account
-            try await user.delete()
 
             // Clear Stellar keypair from Keychain
             await StellarWalletService.shared.clearKeypair()
@@ -142,6 +145,7 @@ enum AuthState {
             self.currentUser = nil
             self.authState = .notAuthenticated
         } catch {
+            self.errorMessage = error.localizedDescription
             print("DEBUG: failed to delete account with error \(error.localizedDescription)")
             throw error
         }
