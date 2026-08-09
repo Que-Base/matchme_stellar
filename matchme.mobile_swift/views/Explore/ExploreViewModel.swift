@@ -20,6 +20,8 @@ struct ExploreProfile: Identifiable {
     let interests: [String]
     /// First remote photo URL. Falls back to nil (card shows placeholder).
     let photoURL: String?
+    /// Stellar public key of the target user (used for reward payouts).
+    let stellarPublicKey: String?
 }
 
 @Observable
@@ -38,8 +40,7 @@ final class ExploreViewModel {
 
     // MARK: - Fetch
 
-    /// ISS-008a — Stub. Fetches candidate profiles from Firestore.
-    /// TODO: exclude current user, already-liked UIDs, already-passed UIDs.
+    /// Candidate profile fetch.
     func fetchProfiles(currentUserID: String) async {
         isLoading = true
         defer { isLoading = false }
@@ -59,7 +60,8 @@ final class ExploreViewModel {
                     age: data["age"] as? Int,
                     occupation: data["occupation"] as? String,
                     interests: data["interests"] as? [String] ?? [],
-                    photoURL: (data["photoURLs"] as? [String])?.first
+                    photoURL: (data["photoURLs"] as? [String])?.first,
+                    stellarPublicKey: data["stellarPublicKey"] as? String
                 )
             }
         } catch {
@@ -69,39 +71,172 @@ final class ExploreViewModel {
 
     // MARK: - Actions
 
-    /// ISS-008g — Stub. Persists a like to Firestore and removes the card.
-    /// TODO: write to `likes/{currentUID}/liked/{targetUID}`, then call checkForMatch().
-    func like(profile: ExploreProfile, currentUserID: String) {
+    /// ISS-051a/d — Persists a like to Firestore, triggers reward, checks for mutual match, and removes top card.
+    func like(profile: ExploreProfile, currentUserID: String, userPublicKey: String? = nil) {
         removeTopCard()
-        // TODO: persist like, check for mutual match (ISS-008h)
-        // ISS-026d — trigger received-like reward for the target user (needs their public key)
+        guard !currentUserID.isEmpty else { return }
+
+        Task {
+            let targetID = profile.id
+
+            // Write to likes/{currentUID}/liked/{targetID}
+            try? await db
+                .collection("likes")
+                .document(currentUserID)
+                .collection("liked")
+                .document(targetID)
+                .setData([
+                    "timestamp": FieldValue.serverTimestamp(),
+                    "isSuperLike": false
+                ])
+
+            // Write to likes/{targetID}/likedBy/{currentUID}
+            try? await db
+                .collection("likes")
+                .document(targetID)
+                .collection("likedBy")
+                .document(currentUserID)
+                .setData([
+                    "timestamp": FieldValue.serverTimestamp(),
+                    "isSuperLike": false
+                ])
+
+            // ISS-051d: Trigger received-like reward for target user if key is present
+            if let targetPublicKey = profile.stellarPublicKey {
+                await RewardService.shared.onReceivedLike(
+                    likedUserID: targetID,
+                    fromUserID: currentUserID,
+                    likedUserPublicKey: targetPublicKey
+                )
+            }
+
+            // ISS-051c: Check for mutual match
+            await checkForMatch(
+                currentUserID: currentUserID,
+                targetProfile: profile,
+                userPublicKey: userPublicKey
+            )
+        }
     }
 
-    /// ISS-008g — Stub. Persists a pass to Firestore and removes the card.
-    /// TODO: write to `passes/{currentUID}/passed/{targetUID}`.
+    /// ISS-051b — Persists a pass to Firestore (`passes/{currentUID}/passed/{targetUID}`) and removes top card.
     func pass(profile: ExploreProfile, currentUserID: String) {
         removeTopCard()
-        // TODO: persist pass
+        guard !currentUserID.isEmpty else { return }
+
+        Task {
+            let targetID = profile.id
+            try? await db
+                .collection("passes")
+                .document(currentUserID)
+                .collection("passed")
+                .document(targetID)
+                .setData([
+                    "timestamp": FieldValue.serverTimestamp()
+                ])
+        }
     }
 
-    /// ISS-008e — Stub. Super like — same as like but flagged.
-    /// ISS-026f — deducts 20 MATCH tokens via RewardService.
+    /// Super like — charges 20 MATCH, persists flagged like to Firestore, checks for mutual match, and removes top card.
     func superLike(profile: ExploreProfile, currentUserID: String, userPublicKey: String? = nil) {
         removeTopCard()
-        // ISS-026f — charge user 20 MATCH for super like
-        if let publicKey = userPublicKey {
-            Task {
+        guard !currentUserID.isEmpty else { return }
+
+        Task {
+            let targetID = profile.id
+
+            // Deduct 20 MATCH tokens
+            if let publicKey = userPublicKey {
                 await RewardService.shared.onSuperLikeSent(
                     userID: currentUserID,
-                    toUserID: profile.id,
+                    toUserID: targetID,
                     publicKey: publicKey
                 )
             }
+
+            // Write flagged like to likes/{currentUID}/liked/{targetID}
+            try? await db
+                .collection("likes")
+                .document(currentUserID)
+                .collection("liked")
+                .document(targetID)
+                .setData([
+                    "timestamp": FieldValue.serverTimestamp(),
+                    "isSuperLike": true
+                ])
+
+            // Write to likes/{targetID}/likedBy/{currentUID}
+            try? await db
+                .collection("likes")
+                .document(targetID)
+                .collection("likedBy")
+                .document(currentUserID)
+                .setData([
+                    "timestamp": FieldValue.serverTimestamp(),
+                    "isSuperLike": true
+                ])
+
+            // Trigger received-like reward for target user
+            if let targetPublicKey = profile.stellarPublicKey {
+                await RewardService.shared.onReceivedLike(
+                    likedUserID: targetID,
+                    fromUserID: currentUserID,
+                    likedUserPublicKey: targetPublicKey
+                )
+            }
+
+            // Check for mutual match
+            await checkForMatch(
+                currentUserID: currentUserID,
+                targetProfile: profile,
+                userPublicKey: userPublicKey
+            )
         }
-        // TODO: persist super like to Firestore with superLike flag
     }
 
     // MARK: - Helpers
+
+    /// ISS-051c — Checks if target user has already liked current user. If so, creates conversation and triggers match reward.
+    private func checkForMatch(currentUserID: String, targetProfile: ExploreProfile, userPublicKey: String? = nil) async {
+        let targetID = targetProfile.id
+
+        do {
+            let likedByDoc = try await db
+                .collection("likes")
+                .document(currentUserID)
+                .collection("likedBy")
+                .document(targetID)
+                .getDocument()
+
+            if likedByDoc.exists {
+                // Mutual match! Create conversation
+                let conversationID = [currentUserID, targetID].sorted().joined(separator: "_")
+                let conversationRef = db.collection("conversations").document(conversationID)
+
+                let conversationData: [String: Any] = [
+                    "participants": [currentUserID, targetID],
+                    "lastMessage": "You matched! Say hi 👋",
+                    "lastMessageTimestamp": FieldValue.serverTimestamp(),
+                    "createdAt": FieldValue.serverTimestamp()
+                ]
+
+                try await conversationRef.setData(conversationData, merge: true)
+
+                // ISS-051d: Trigger +100 MATCH reward for mutual match
+                if let publicKey = userPublicKey {
+                    await RewardService.shared.onMutualMatch(
+                        userID: currentUserID,
+                        matchedUserID: targetID,
+                        publicKey: publicKey
+                    )
+                }
+
+                print("ExploreViewModel: Mutual match created with \(targetProfile.fullname) [conversation: \(conversationID)]")
+            }
+        } catch {
+            print("ExploreViewModel: checkForMatch error: \(error.localizedDescription)")
+        }
+    }
 
     private func removeTopCard() {
         guard !profiles.isEmpty else { return }

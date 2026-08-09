@@ -75,13 +75,15 @@ struct ExploreView: View {
                             onSuperLike: {
                                 viewModel.superLike(
                                     profile: topProfile,
-                                    currentUserID: authViewModel.currentUser?.id ?? ""
+                                    currentUserID: authViewModel.currentUser?.id ?? "",
+                                    userPublicKey: authViewModel.currentUser?.stellarPublicKey
                                 )
                             },
                             onLike: {
                                 viewModel.like(
                                     profile: topProfile,
-                                    currentUserID: authViewModel.currentUser?.id ?? ""
+                                    currentUserID: authViewModel.currentUser?.id ?? "",
+                                    userPublicKey: authViewModel.currentUser?.stellarPublicKey
                                 )
                             }
                         )
