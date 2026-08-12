@@ -49,52 +49,185 @@ final class ChatViewModel {
     var errorMessage: String?
 
     private let db = Firestore.firestore()
+    private var conversationsListener: ListenerRegistration?
+    private var messagesListener: ListenerRegistration?
 
-    // MARK: - ISS-010c: Fetch conversation list
+    deinit {
+        conversationsListener?.remove()
+        messagesListener?.remove()
+    }
 
-    /// Stub. Queries `conversations` collection filtered by current user.
-    /// TODO: replace with real-time addSnapshotListener (ISS-010e).
+    // MARK: - ISS-055a/d: Fetch and listen to conversation list
+
+    /// Subscribes to real-time updates for `conversations` where `participants` array contains `currentUserID`.
     func fetchConversations(currentUserID: String) async {
+        guard !currentUserID.isEmpty else {
+            conversations = []
+            return
+        }
+
         isLoadingConversations = true
-        defer { isLoadingConversations = false }
+        errorMessage = nil
 
-        // Placeholder until match + conversation creation (ISS-008h) is implemented.
-        // Replace with:
-        //   db.collection("conversations")
-        //     .whereField("participants", arrayContains: currentUserID)
-        //     .order(by: "lastMessageDate", descending: true)
-        //     .getDocuments()
-        conversations = []
+        conversationsListener?.remove()
+        conversationsListener = db
+            .collection("conversations")
+            .whereField("participants", arrayContains: currentUserID)
+            .addSnapshotListener { [weak self] snapshot, error in
+                guard let self = self else { return }
+                self.isLoadingConversations = false
+
+                if let error = error {
+                    self.errorMessage = error.localizedDescription
+                    print("ChatViewModel: fetchConversations error: \(error.localizedDescription)")
+                    return
+                }
+
+                guard let documents = snapshot?.documents else {
+                    self.conversations = []
+                    return
+                }
+
+                Task {
+                    var fetchedConversations: [Conversation] = []
+
+                    for doc in documents {
+                        let data = doc.data()
+                        let participants = data["participants"] as? [String] ?? []
+                        guard let matchedID = participants.first(where: { $0 != currentUserID }) else {
+                            continue
+                        }
+
+                        let lastMsg = data["lastMessage"] as? String ?? ""
+                        let lastMsgTimestamp = (data["lastMessageTimestamp"] as? Timestamp)?.dateValue()
+                            ?? (data["createdAt"] as? Timestamp)?.dateValue()
+                            ?? Date()
+
+                        // Fetch matched user details from `users/{matchedID}`
+                        var matchedName = "Matched User"
+                        var matchedPhotoURL: String? = nil
+
+                        do {
+                            let userDoc = try await self.db.collection("users").document(matchedID).getDocument()
+                            if userDoc.exists, let userData = userDoc.data() {
+                                matchedName = userData["fullname"] as? String ?? "Matched User"
+                                matchedPhotoURL = (userData["photoURLs"] as? [String])?.first
+                            }
+                        } catch {
+                            print("ChatViewModel: Failed to fetch matched user \(matchedID): \(error.localizedDescription)")
+                        }
+
+                        let conv = Conversation(
+                            id: doc.documentID,
+                            matchedUserID: matchedID,
+                            matchedUserName: matchedName,
+                            matchedUserPhotoURL: matchedPhotoURL,
+                            lastMessage: lastMsg,
+                            lastMessageDate: lastMsgTimestamp,
+                            unreadCount: 0
+                        )
+                        fetchedConversations.append(conv)
+                    }
+
+                    // Sort by most recent message date
+                    self.conversations = fetchedConversations.sorted(by: { $0.lastMessageDate > $1.lastMessageDate })
+                }
+            }
     }
 
-    // MARK: - ISS-010d: Fetch messages for a conversation
+    // MARK: - ISS-055b/d: Fetch and listen to messages for a conversation
 
-    /// Stub. Queries `conversations/{id}/messages` subcollection.
-    /// TODO: replace with real-time listener (ISS-010e).
+    /// Subscribes to real-time updates for `conversations/{id}/messages` subcollection ordered by date ascending.
     func fetchMessages(conversationID: String) async {
-        isLoadingMessages = true
-        defer { isLoadingMessages = false }
+        guard !conversationID.isEmpty else {
+            messages = []
+            return
+        }
 
-        // Replace with:
-        //   db.collection("conversations").document(conversationID)
-        //     .collection("messages").order(by: "date").getDocuments()
-        messages = []
+        isLoadingMessages = true
+        errorMessage = nil
+
+        messagesListener?.remove()
+        messagesListener = db
+            .collection("conversations")
+            .document(conversationID)
+            .collection("messages")
+            .order(by: "timestamp", descending: false)
+            .addSnapshotListener { [weak self] snapshot, error in
+                guard let self = self else { return }
+                self.isLoadingMessages = false
+
+                if let error = error {
+                    self.errorMessage = error.localizedDescription
+                    print("ChatViewModel: fetchMessages error: \(error.localizedDescription)")
+                    return
+                }
+
+                guard let documents = snapshot?.documents else {
+                    self.messages = []
+                    return
+                }
+
+                self.messages = documents.compactMap { doc -> Message? in
+                    let data = doc.data()
+                    guard let senderID = data["senderID"] as? String,
+                          let text = data["text"] as? String else { return nil }
+
+                    let date = (data["timestamp"] as? Timestamp)?.dateValue() ?? Date()
+
+                    return Message(
+                        id: doc.documentID,
+                        senderID: senderID,
+                        text: text,
+                        date: date
+                    )
+                }
+            }
     }
 
-    // MARK: - ISS-010f: Send a message
+    // MARK: - ISS-055c: Send a message
 
-    /// Stub. Writes a new message to the messages subcollection and updates
-    /// the conversation's lastMessage field.
+    /// Writes a new message to `conversations/{id}/messages` subcollection and updates the top-level conversation's `lastMessage` and `lastMessageTimestamp`.
     func sendMessage(conversationID: String, senderID: String) {
-        guard !draftText.trimmingCharacters(in: .whitespaces).isEmpty else { return }
-        let text = draftText
+        guard !conversationID.isEmpty, !senderID.isEmpty else { return }
+        let text = draftText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !text.isEmpty else { return }
+
         draftText = ""
 
-        // TODO: write to Firestore:
-        //   db.collection("conversations").document(conversationID)
-        //     .collection("messages").addDocument(data: [...])
-        //   db.collection("conversations").document(conversationID)
-        //     .updateData(["lastMessage": text, "lastMessageDate": Date()])
-        _ = text
+        let messageData: [String: Any] = [
+            "senderID": senderID,
+            "text": text,
+            "timestamp": FieldValue.serverTimestamp()
+        ]
+
+        let conversationRef = db.collection("conversations").document(conversationID)
+
+        // Write message document
+        conversationRef.collection("messages").addDocument(data: messageData) { [weak self] error in
+            if let error = error {
+                self?.errorMessage = error.localizedDescription
+                print("ChatViewModel: sendMessage error: \(error.localizedDescription)")
+                return
+            }
+
+            // Update conversation header fields
+            conversationRef.updateData([
+                "lastMessage": text,
+                "lastMessageTimestamp": FieldValue.serverTimestamp()
+            ])
+        }
+    }
+
+    /// Stops listening to active message stream (e.g. on view disapear).
+    func stopMessagesListener() {
+        messagesListener?.remove()
+        messagesListener = nil
+    }
+
+    /// Stops listening to active conversation list stream.
+    func stopConversationsListener() {
+        conversationsListener?.remove()
+        conversationsListener = nil
     }
 }
