@@ -65,7 +65,8 @@ struct LikeView: View {
                                     onLikeBack: {
                                         viewModel.likeBack(
                                             profile: profile,
-                                            currentUserID: authViewModel.currentUser?.id ?? ""
+                                            currentUserID: authViewModel.currentUser?.id ?? "",
+                                            userPublicKey: authViewModel.currentUser?.stellarPublicKey
                                         )
                                     },
                                     onPass: {

@@ -90,17 +90,120 @@ final class LikesViewModel {
 
     // MARK: - Actions
 
-    /// ISS-009d — Stub. Like back — triggers a match if mutual.
-    /// TODO: write to Firestore likes collection, then call match detection (ISS-054).
-    func likeBack(profile: LikedByProfile, currentUserID: String) {
+    /// ISS-054a/b — Persists a like-back to Firestore, deletes from `likedBy`, triggers rewards & mutual match creation.
+    func likeBack(profile: LikedByProfile, currentUserID: String, userPublicKey: String? = nil) {
         profiles.removeAll { $0.id == profile.id }
-        // TODO: persist like, trigger match event (ISS-054)
+        guard !currentUserID.isEmpty else { return }
+
+        Task {
+            let targetID = profile.id
+
+            // Write to likes/{currentUID}/liked/{targetID}
+            try? await db
+                .collection("likes")
+                .document(currentUserID)
+                .collection("liked")
+                .document(targetID)
+                .setData([
+                    "timestamp": FieldValue.serverTimestamp(),
+                    "isSuperLike": false
+                ])
+
+            // Write to likes/{targetID}/likedBy/{currentUID}
+            try? await db
+                .collection("likes")
+                .document(targetID)
+                .collection("likedBy")
+                .document(currentUserID)
+                .setData([
+                    "timestamp": FieldValue.serverTimestamp(),
+                    "isSuperLike": false
+                ])
+
+            // Remove target from current user's likedBy subcollection
+            try? await db
+                .collection("likes")
+                .document(currentUserID)
+                .collection("likedBy")
+                .document(targetID)
+                .delete()
+
+            // Trigger received-like reward for target user if key is present
+            if let targetPublicKey = profile.stellarPublicKey {
+                await RewardService.shared.onReceivedLike(
+                    likedUserID: targetID,
+                    fromUserID: currentUserID,
+                    likedUserPublicKey: targetPublicKey
+                )
+            }
+
+            // Create mutual match & conversation since target user had already liked current user
+            await createMutualMatch(
+                currentUserID: currentUserID,
+                targetProfile: profile,
+                userPublicKey: userPublicKey
+            )
+        }
     }
 
-    /// ISS-009d — Stub. Pass on a profile that liked you.
-    /// TODO: write to Firestore passes collection (ISS-054).
+    /// ISS-054c — Persists a pass on a user who liked you to Firestore (`passes/{currentUID}/passed/{targetUID}`) and removes from `likedBy`.
     func pass(profile: LikedByProfile, currentUserID: String) {
         profiles.removeAll { $0.id == profile.id }
-        // TODO: persist pass (ISS-054)
+        guard !currentUserID.isEmpty else { return }
+
+        Task {
+            let targetID = profile.id
+
+            // Write to passes/{currentUID}/passed/{targetID}
+            try? await db
+                .collection("passes")
+                .document(currentUserID)
+                .collection("passed")
+                .document(targetID)
+                .setData([
+                    "timestamp": FieldValue.serverTimestamp()
+                ])
+
+            // Remove target from current user's likedBy subcollection
+            try? await db
+                .collection("likes")
+                .document(currentUserID)
+                .collection("likedBy")
+                .document(targetID)
+                .delete()
+        }
+    }
+
+    // MARK: - Helpers
+
+    /// ISS-054b — Creates a conversation for a mutual match and triggers the match reward (+100 MATCH).
+    private func createMutualMatch(currentUserID: String, targetProfile: LikedByProfile, userPublicKey: String? = nil) async {
+        let targetID = targetProfile.id
+        let conversationID = [currentUserID, targetID].sorted().joined(separator: "_")
+        let conversationRef = db.collection("conversations").document(conversationID)
+
+        do {
+            let conversationData: [String: Any] = [
+                "participants": [currentUserID, targetID],
+                "lastMessage": "You matched! Say hi 👋",
+                "lastMessageTimestamp": FieldValue.serverTimestamp(),
+                "createdAt": FieldValue.serverTimestamp()
+            ]
+
+            try await conversationRef.setData(conversationData, merge: true)
+
+            // Trigger +100 MATCH reward for mutual match
+            if let publicKey = userPublicKey {
+                await RewardService.shared.onMutualMatch(
+                    userID: currentUserID,
+                    matchedUserID: targetID,
+                    publicKey: publicKey
+                )
+            }
+
+            print("LikesViewModel: Mutual match created with \(targetProfile.fullname) [conversation: \(conversationID)]")
+        } catch {
+            print("LikesViewModel: createMutualMatch error: \(error.localizedDescription)")
+        }
     }
 }
