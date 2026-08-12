@@ -84,6 +84,9 @@ struct ConversationDetailView: View {
         .task {
             await viewModel.fetchMessages(conversationID: conversation.id)
         }
+        .onDisappear {
+            viewModel.stopMessagesListener()
+        }
     }
 }
 

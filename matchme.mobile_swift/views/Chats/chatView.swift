@@ -67,6 +67,9 @@ struct ChatView: View {
                     currentUserID: authViewModel.currentUser?.id ?? ""
                 )
             }
+            .onDisappear {
+                viewModel.stopConversationsListener()
+            }
         }
     }
 }
