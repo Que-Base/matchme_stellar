@@ -34,28 +34,88 @@ final class ExploreViewModel {
     var isLoading: Bool = false
     var errorMessage: String?
 
+    // MARK: - Pagination & Exclusion State (ISS-052)
+
+    private var lastDocument: DocumentSnapshot?
+    private var isFetchingMore: Bool = false
+    private var hasMoreProfiles: Bool = true
+    private var excludedUIDs: Set<String> = []
+
     // MARK: - Firestore
 
     private let db = Firestore.firestore()
 
     // MARK: - Fetch
 
-    /// Candidate profile fetch.
-    func fetchProfiles(currentUserID: String) async {
-        isLoading = true
-        defer { isLoading = false }
+    /// ISS-052a/b — Candidate profile fetch excluding current user, already-liked UIDs, and already-passed UIDs.
+    func fetchProfiles(currentUserID: String, isInitialLoad: Bool = true) async {
+        guard !currentUserID.isEmpty else { return }
+
+        if isInitialLoad {
+            isLoading = true
+            lastDocument = nil
+            hasMoreProfiles = true
+            excludedUIDs = [currentUserID]
+        } else {
+            guard !isFetchingMore && hasMoreProfiles else { return }
+            isFetchingMore = true
+        }
+
+        defer {
+            isLoading = false
+            isFetchingMore = false
+        }
 
         do {
-            let snapshot = try await db
+            // ISS-052a: Fetch liked and passed UIDs on initial load
+            if isInitialLoad {
+                let likedSnapshot = try? await db
+                    .collection("likes")
+                    .document(currentUserID)
+                    .collection("liked")
+                    .getDocuments()
+
+                let passedSnapshot = try? await db
+                    .collection("passes")
+                    .document(currentUserID)
+                    .collection("passed")
+                    .getDocuments()
+
+                if let likedDocs = likedSnapshot?.documents {
+                    excludedUIDs.formUnion(likedDocs.map { $0.documentID })
+                }
+                if let passedDocs = passedSnapshot?.documents {
+                    excludedUIDs.formUnion(passedDocs.map { $0.documentID })
+                }
+            }
+
+            var query: Query = db
                 .collection("users")
                 .limit(to: 20)
-                .getDocuments()
 
-            profiles = snapshot.documents.compactMap { doc -> ExploreProfile? in
+            if let lastDoc = lastDocument {
+                query = query.start(afterDocument: lastDoc)
+            }
+
+            let snapshot = try await query.getDocuments()
+
+            if snapshot.documents.isEmpty {
+                hasMoreProfiles = false
+                if isInitialLoad {
+                    profiles = []
+                }
+                return
+            }
+
+            lastDocument = snapshot.documents.last
+
+            let newProfiles = snapshot.documents.compactMap { doc -> ExploreProfile? in
+                let docID = doc.documentID
+                guard !excludedUIDs.contains(docID) else { return nil }
+
                 let data = doc.data()
-                guard doc.documentID != currentUserID else { return nil }
                 return ExploreProfile(
-                    id: doc.documentID,
+                    id: docID,
                     fullname: data["fullname"] as? String ?? "Unknown",
                     age: data["age"] as? Int,
                     occupation: data["occupation"] as? String,
@@ -64,8 +124,16 @@ final class ExploreViewModel {
                     stellarPublicKey: data["stellarPublicKey"] as? String
                 )
             }
+
+            if isInitialLoad {
+                profiles = newProfiles
+            } else {
+                // Prepend new profiles to bottom of stack (since top of stack is last element)
+                profiles.insert(contentsOf: newProfiles, at: 0)
+            }
         } catch {
             errorMessage = error.localizedDescription
+            print("ExploreViewModel: fetchProfiles error: \(error.localizedDescription)")
         }
     }
 
@@ -73,7 +141,7 @@ final class ExploreViewModel {
 
     /// ISS-051a/d — Persists a like to Firestore, triggers reward, checks for mutual match, and removes top card.
     func like(profile: ExploreProfile, currentUserID: String, userPublicKey: String? = nil) {
-        removeTopCard()
+        removeTopCard(currentUserID: currentUserID)
         guard !currentUserID.isEmpty else { return }
 
         Task {
@@ -121,7 +189,7 @@ final class ExploreViewModel {
 
     /// ISS-051b — Persists a pass to Firestore (`passes/{currentUID}/passed/{targetUID}`) and removes top card.
     func pass(profile: ExploreProfile, currentUserID: String) {
-        removeTopCard()
+        removeTopCard(currentUserID: currentUserID)
         guard !currentUserID.isEmpty else { return }
 
         Task {
@@ -139,7 +207,7 @@ final class ExploreViewModel {
 
     /// Super like — charges 20 MATCH, persists flagged like to Firestore, checks for mutual match, and removes top card.
     func superLike(profile: ExploreProfile, currentUserID: String, userPublicKey: String? = nil) {
-        removeTopCard()
+        removeTopCard(currentUserID: currentUserID)
         guard !currentUserID.isEmpty else { return }
 
         Task {
@@ -238,8 +306,15 @@ final class ExploreViewModel {
         }
     }
 
-    private func removeTopCard() {
+    private func removeTopCard(currentUserID: String = "") {
         guard !profiles.isEmpty else { return }
         profiles.removeLast()
+
+        // ISS-052c: Auto-prefetch next page of candidate profiles when stack runs low (<= 3 cards remaining)
+        if profiles.count <= 3 && !currentUserID.isEmpty {
+            Task {
+                await fetchProfiles(currentUserID: currentUserID, isInitialLoad: false)
+            }
+        }
     }
 }
