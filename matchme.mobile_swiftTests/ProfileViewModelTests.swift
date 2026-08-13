@@ -72,4 +72,32 @@ final class ProfileViewModelTests: XCTestCase {
         let vm = ProfileViewModel.jostevModel(premiumAccount: false, profileSetupComplition: 0.5)
         XCTAssertFalse(vm.firstName.isEmpty)
     }
+
+    // MARK: - setupInit & Field Updates (ISS-072)
+
+    func test_setupInit_defaultsToEmptyFields() {
+        let vm = ProfileViewModel.setupInit()
+        XCTAssertEqual(vm.firstName, "")
+        XCTAssertEqual(vm.lastName, "")
+        XCTAssertEqual(vm.occupation, "")
+        XCTAssertEqual(vm.bio, "")
+        XCTAssertEqual(vm.profileSetupComplition, 0.1, accuracy: 0.001)
+    }
+
+    func test_mutateFields_updatesViewModelProperties() {
+        let user = User(id: "user_123", fullname: "Ada Lovelace", email: "ada@example.com")
+        let vm = ProfileViewModel(from: user)
+
+        vm.firstName = "Augusta"
+        vm.lastName = "King"
+        vm.occupation = "Computer Pioneer"
+        vm.bio = "First computer programmer"
+        vm.profileSetupComplition = 0.75
+
+        XCTAssertEqual(vm.firstName, "Augusta")
+        XCTAssertEqual(vm.lastName, "King")
+        XCTAssertEqual(vm.occupation, "Computer Pioneer")
+        XCTAssertEqual(vm.bio, "First computer programmer")
+        XCTAssertEqual(vm.profileSetupComplition, 0.75, accuracy: 0.001)
+    }
 }

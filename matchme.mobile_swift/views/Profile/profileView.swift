@@ -32,8 +32,14 @@ struct ProfileView: View {
         RouterView { router in
             ScrollView {
                 LazyVStack {
-                  CuddleProfileInfoView(profile: userProfile)
-                        .padding(.vertical, 32)
+                    CuddleProfileInfoView(profile: userProfile) {
+                        router.showScreen(.sheet) { _ in
+                            NavigationStack {
+                                ProfileSetupView()
+                            }
+                        }
+                    }
+                    .padding(.vertical, 32)
 
                     HStack(alignment: .bottom) {
                         Button(action: { activeTab1 = true }) {
