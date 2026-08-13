@@ -14,14 +14,16 @@ import FirebaseFirestore
 struct ProfileSetupView: View {
 
     @Environment(AuthViewModel.self) private var authViewModel
+    @Environment(\.dismiss) private var dismiss
 
     @State private var textNameField: String = ""
     @State private var textJobField: String = ""
     @State private var textBioField: String = ""
     @State private var isSaving: Bool = false
     @State private var errorMessage: String?
+    @State private var showErrorAlert: Bool = false
 
-    /// ISS-014a — called when setup completes so the caller can navigate away.
+    /// ISS-014a / ISS-072 — called when setup completes so the caller can navigate away.
     var onComplete: (() -> Void)?
 
     var body: some View {
@@ -68,15 +70,20 @@ struct ProfileSetupView: View {
                         .padding(.bottom, 12)
                 }
 
-                CuddleGradientButton(label: isSaving ? "Saving…" : "All good") {
+                CuddleGradientButton(label: isSaving ? "Saving…" : "Save profile") {
                     Task { await saveProfile() }
                 }
             }
             .padding(.horizontal, 24)
             .padding(.vertical, 32)
         }
-        .navigationTitle("Set up your profile")
+        .navigationTitle("Edit profile")
         .navigationBarTitleDisplayMode(.inline)
+        .alert("Error Saving Profile", isPresented: $showErrorAlert) {
+            Button("OK", role: .cancel) { }
+        } message: {
+            Text(errorMessage ?? "An unknown error occurred while saving your profile.")
+        }
         .onAppear {
             // Pre-fill with existing user data if available
             if let user = authViewModel.currentUser {
@@ -87,12 +94,13 @@ struct ProfileSetupView: View {
         }
     }
 
-    // MARK: - ISS-014b / ISS-038: Save to Firestore via ProfileViewModel
+    // MARK: - ISS-014b / ISS-038 / ISS-072: Save to Firestore via ProfileViewModel
 
     private func saveProfile() async {
-        guard authViewModel.currentUser != nil else { return }
+        guard let user = authViewModel.currentUser else { return }
         guard !textNameField.trimmingCharacters(in: .whitespaces).isEmpty else {
             errorMessage = "Please enter your full name."
+            showErrorAlert = true
             return
         }
 
@@ -100,23 +108,34 @@ struct ProfileSetupView: View {
         errorMessage = nil
 
         // Build a ProfileViewModel from current user then mutate + persist
-        if let user = authViewModel.currentUser {
-            let vm = ProfileViewModel(from: user)
-            let parts = textNameField.trimmingCharacters(in: .whitespaces)
-                .split(separator: " ", maxSplits: 1)
-            vm.firstName = parts.first.map(String.init) ?? textNameField
-            vm.lastName = parts.dropFirst().first.map(String.init) ?? ""
-            vm.occupation = textJobField
-            vm.bio = textBioField
-            vm.profileSetupComplition = computeCompletion()
+        let vm = ProfileViewModel(from: user)
+        let parts = textNameField.trimmingCharacters(in: .whitespaces)
+            .split(separator: " ", maxSplits: 1)
+        vm.firstName = parts.first.map(String.init) ?? textNameField
+        vm.lastName = parts.dropFirst().first.map(String.init) ?? ""
+        vm.occupation = textJobField
+        vm.bio = textBioField
+        vm.profileSetupComplition = computeCompletion()
 
-            do {
-                try await vm.updateProfile()
-                await authViewModel.fetchUser()
-                onComplete?()
-            } catch {
-                errorMessage = error.localizedDescription
+        do {
+            try await vm.updateProfile()
+            await authViewModel.fetchUser()
+
+            // ISS-072c / ISS-026b — Award MATCH tokens when bio is saved and user has a wallet
+            if let updatedUser = authViewModel.currentUser,
+               let publicKey = updatedUser.stellarPublicKey,
+               !textBioField.trimmingCharacters(in: .whitespaces).isEmpty {
+                await RewardService.shared.onProfileCompleted(userID: updatedUser.id, publicKey: publicKey)
             }
+
+            if let onComplete {
+                onComplete()
+            } else {
+                dismiss()
+            }
+        } catch {
+            errorMessage = error.localizedDescription
+            showErrorAlert = true
         }
 
         isSaving = false
