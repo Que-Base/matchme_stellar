@@ -116,4 +116,12 @@ final class StellarWalletServiceTests: XCTestCase {
         let matchBal = await service.matchBalance(for: "INVALID_KEY")
         XCTAssertNil(matchBal)
     }
+
+    // MARK: - Keychain Errors (ISS-068)
+
+    func test_keychainError_descriptionIncludesStatusAndMessage() {
+        let error = StellarWalletServiceError.keychainError(status: -25299, message: "SecItemAdd failed")
+        XCTAssertTrue(error.errorDescription?.contains("-25299") == true)
+        XCTAssertTrue(error.errorDescription?.contains("SecItemAdd failed") == true)
+    }
 }

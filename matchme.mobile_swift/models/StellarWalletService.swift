@@ -39,6 +39,7 @@ public enum StellarWalletServiceError: LocalizedError {
     case insufficientBalance(required: String, available: String)
     case trustlineCreationFailed(String)
     case transactionFailed(String)
+    case keychainError(status: OSStatus, message: String)
 
     public var errorDescription: String? {
         switch self {
@@ -54,6 +55,8 @@ public enum StellarWalletServiceError: LocalizedError {
             return "Failed to establish trustline: \(reason)"
         case .transactionFailed(let reason):
             return "Transaction submission failed: \(reason)"
+        case .keychainError(let status, let message):
+            return "Keychain operation failed (\(message), OSStatus: \(status))."
         }
     }
 }
@@ -68,7 +71,7 @@ actor StellarWalletService {
 
     /// Returns existing keypair from Keychain, or generates and stores a new one.
     func getOrCreateKeypair() throws -> KeyPair {
-        if let secret = loadSecretFromKeychain(),
+        if let secret = try loadSecretFromKeychain(),
            let kp = try? KeyPair(secretSeed: secret) {
             return kp
         }
@@ -377,11 +380,7 @@ actor StellarWalletService {
         SecItemDelete(query as CFDictionary)
         let status = SecItemAdd(query as CFDictionary, nil)
         guard status == errSecSuccess else {
-            throw NSError(
-                domain: "StellarWallet",
-                code: Int(status),
-                userInfo: [NSLocalizedDescriptionKey: "Keychain write failed"]
-            )
+            throw StellarWalletServiceError.keychainError(status: status, message: "SecItemAdd failed")
         }
     }
 
@@ -394,7 +393,7 @@ actor StellarWalletService {
         SecItemDelete(query as CFDictionary)
     }
 
-    private func loadSecretFromKeychain() -> String? {
+    private func loadSecretFromKeychain() throws -> String? {
         let query: [CFString: Any] = [
             kSecClass: kSecClassGenericPassword,
             kSecAttrAccount: keychainSecretKey,
@@ -402,8 +401,16 @@ actor StellarWalletService {
             kSecMatchLimit: kSecMatchLimitOne
         ]
         var result: AnyObject?
-        guard SecItemCopyMatching(query as CFDictionary, &result) == errSecSuccess,
-              let data = result as? Data else { return nil }
-        return String(data: data, encoding: .utf8)
+        let status = SecItemCopyMatching(query as CFDictionary, &result)
+        if status == errSecItemNotFound {
+            return nil
+        }
+        guard status == errSecSuccess else {
+            throw StellarWalletServiceError.keychainError(status: status, message: "SecItemCopyMatching failed")
+        }
+        guard let data = result as? Data, let secret = String(data: data, encoding: .utf8) else {
+            return nil
+        }
+        return secret
     }
 }
