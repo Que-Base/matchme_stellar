@@ -32,6 +32,10 @@ enum AuthState {
     /// staying on CuddleLoadingView indefinitely.
     var fetchUserFailed: Bool = false
 
+    /// ISS-066 — true when Stellar wallet creation failed during signup or is missing
+    var walletSetupFailed: Bool = false
+    var isRetryingWalletSetup: Bool = false
+
     // Retain the listener handle so it is not immediately deallocated
     private var authStateListenerHandle: AuthStateDidChangeListenerHandle?
     private let maxFetchRetries = 3
@@ -96,6 +100,12 @@ enum AuthState {
             } catch {
                 print("DEBUG: Unexpected Stellar keypair error in createUser() (ISS-068): \(error.localizedDescription)")
             }
+            
+            if stellarPublicKey == nil {
+                self.walletSetupFailed = true
+            } else {
+                self.walletSetupFailed = false
+            }
 
             let _user = User(id: result.user.uid, fullname: fullname, email: email, stellarPublicKey: stellarPublicKey)
 
@@ -133,19 +143,19 @@ enum AuthState {
 
         do {
             // Delete the Firebase Auth account FIRST (ISS-064a)
-            // If this fails (e.g. requiresRecentLogin), the Firestore document remains intact
-            // and no orphaned Auth record is left.
+            // If this fails (e.g. requiresRecentLogin), the Firestore document
+            // is not deleted, preventing orphaned Auth accounts.
             try await user.delete()
 
-            // Delete Firestore user document second
-            try? await Firestore
+            // Delete Keychain Stellar seed (ISS-050)
+            await StellarWalletService.shared.clearKeypair()
+
+            // Auth deletion succeeded — now delete the Firestore user document (ISS-064b)
+            try await Firestore
                 .firestore()
                 .collection("users")
                 .document(userUID)
                 .delete()
-
-            // Clear Stellar keypair from Keychain
-            await StellarWalletService.shared.clearKeypair()
 
             // Reset local state
             self.userSession = nil
@@ -196,5 +206,31 @@ enum AuthState {
         fetchUserFailed = false
         errorMessage = nil
         await fetchUser()
+    }
+
+    // MARK: - ISS-066: Wallet Repair / Retry
+
+    /// Attempts to repair or create a Stellar wallet for the current user if missing or failed during signup.
+    @discardableResult
+    func retryWalletSetup() async throws -> String {
+        guard let user = currentUser ?? (Auth.auth().currentUser.map { User(id: $0.uid, fullname: $0.displayName ?? "", email: $0.email ?? "") }) else {
+            throw StellarWalletServiceError.keypairNotFound
+        }
+
+        isRetryingWalletSetup = true
+        defer { isRetryingWalletSetup = false }
+
+        let kp = try await StellarWalletService.shared.getOrCreateKeypair()
+        try? await StellarWalletService.shared.fundTestnetAccount(publicKey: kp.accountId)
+        try? await StellarWalletService.shared.ensureMatchTrustline(publicKey: kp.accountId)
+
+        try await Firestore.firestore()
+            .collection("users")
+            .document(user.id)
+            .updateData(["stellarPublicKey": kp.accountId])
+
+        await fetchUser()
+        self.walletSetupFailed = false
+        return kp.accountId
     }
 }

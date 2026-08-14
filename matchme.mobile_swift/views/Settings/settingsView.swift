@@ -27,8 +27,11 @@ struct SettingsView: View {
     @State private var deleteError: String? = nil
     /// ISS-064c — controls account deletion failure alert
     @State private var showDeleteErrorAlert = false
-    /// ISS-058 — shown when user has no Stellar wallet yet
+    /// ISS-058 / ISS-066 — shown when user has no Stellar wallet yet
     @State private var showNoWalletAlert = false
+    @State private var isRepairingWallet = false
+    @State private var walletRepairError: String? = nil
+    @State private var showWalletRepairErrorAlert = false
     /// ISS-011c — notification toggle (stub, not yet wired to UNUserNotificationCenter)
     @State private var notificationsEnabled = true
     /// ISS-011d — profile visibility toggle (stub, not yet persisted to Firestore)
@@ -46,8 +49,11 @@ struct SettingsView: View {
                         // TODO: wire to OAuth flow
                     }
 
-                // ISS-058 — pass stellarPublicKey from currentUser; handle nil (no wallet yet)
-                SettingsRow(icon: "wallet.pass", label: "Stellar Wallet") {
+                // ISS-058 / ISS-066 — pass stellarPublicKey from currentUser; handle nil (no wallet yet)
+                SettingsRow(
+                    icon: "wallet.pass",
+                    label: authViewModel.currentUser?.stellarPublicKey != nil ? "Stellar Wallet" : "Set Up Stellar Wallet"
+                ) {
                     if let publicKey = authViewModel.currentUser?.stellarPublicKey {
                         router.showScreen(.push) { _ in
                             StellarWalletView(publicKey: publicKey)
@@ -160,11 +166,33 @@ struct SettingsView: View {
                 Text(deleteError ?? "An error occurred while deleting your account. If you signed in a long time ago, please sign out and sign back in before trying again.")
             }
 
-            // MARK: No wallet alert (ISS-058)
-            .alert("No Stellar Wallet", isPresented: $showNoWalletAlert) {
+            // MARK: No wallet alert / Setup action (ISS-058 / ISS-066)
+            .alert("Set Up Stellar Wallet", isPresented: $showNoWalletAlert) {
+                Button("Create Wallet") {
+                    Task {
+                        isRepairingWallet = true
+                        do {
+                            let publicKey = try await authViewModel.retryWalletSetup()
+                            router.showScreen(.push) { _ in
+                                StellarWalletView(publicKey: publicKey)
+                            }
+                        } catch {
+                            walletRepairError = error.localizedDescription
+                            showWalletRepairErrorAlert = true
+                        }
+                        isRepairingWallet = false
+                    }
+                }
+                Button("Cancel", role: .cancel) {}
+            } message: {
+                Text("Your account doesn't have a Stellar wallet configured yet. Tap 'Create Wallet' to generate your keypair, fund your testnet account, and enable MATCH rewards.")
+            }
+
+            // MARK: Wallet repair error alert (ISS-066)
+            .alert("Wallet Setup Failed", isPresented: $showWalletRepairErrorAlert) {
                 Button("OK", role: .cancel) {}
             } message: {
-                Text("Your account doesn't have a Stellar wallet yet. Try signing out and signing back in to generate one, or contact support.")
+                Text(walletRepairError ?? "An error occurred while creating your Stellar wallet. Please try again.")
             }
         }
         .padding(.horizontal, 0)

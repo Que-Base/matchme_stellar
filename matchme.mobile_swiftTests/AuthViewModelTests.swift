@@ -62,4 +62,16 @@ final class AuthViewModelTests: XCTestCase {
         XCTAssertNil(vm.userSession)
         XCTAssertEqual(vm.authState, .notAuthenticated)
     }
+
+    // MARK: - Wallet Setup / Repair (ISS-066)
+
+    func test_initialWalletSetupFailed_isFalse() {
+        let vm = AuthViewModel()
+        XCTAssertFalse(vm.walletSetupFailed)
+    }
+
+    func test_initialIsRetryingWalletSetup_isFalse() {
+        let vm = AuthViewModel()
+        XCTAssertFalse(vm.isRetryingWalletSetup)
+    }
 }
