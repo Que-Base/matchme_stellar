@@ -80,14 +80,21 @@ enum AuthState {
             let result = try await Auth.auth().createUser(withEmail: email, password: password)
             self.userSession = result.user
 
-            // Generate Stellar keypair, fund on testnet, and establish MATCH trustline (ISS-022d)
-            let stellarPublicKey: String?
-            if let kp = try? await StellarWalletService.shared.getOrCreateKeypair() {
+            // Generate Stellar keypair, fund on testnet, and establish MATCH trustline (ISS-022d, ISS-068)
+            var stellarPublicKey: String? = nil
+            do {
+                let kp = try await StellarWalletService.shared.getOrCreateKeypair()
                 stellarPublicKey = kp.accountId
-                try? await StellarWalletService.shared.fundTestnetAccount(publicKey: kp.accountId)
-                try? await StellarWalletService.shared.ensureMatchTrustline(publicKey: kp.accountId)
-            } else {
-                stellarPublicKey = nil
+                do {
+                    try await StellarWalletService.shared.fundTestnetAccount(publicKey: kp.accountId)
+                    try await StellarWalletService.shared.ensureMatchTrustline(publicKey: kp.accountId)
+                } catch {
+                    print("DEBUG: fundTestnetAccount / ensureMatchTrustline non-fatal error: \(error.localizedDescription)")
+                }
+            } catch let error as StellarWalletServiceError {
+                print("DEBUG: Stellar keypair/Keychain failure in createUser() (ISS-068): \(error.localizedDescription)")
+            } catch {
+                print("DEBUG: Unexpected Stellar keypair error in createUser() (ISS-068): \(error.localizedDescription)")
             }
 
             let _user = User(id: result.user.uid, fullname: fullname, email: email, stellarPublicKey: stellarPublicKey)
