@@ -63,6 +63,19 @@ final class AuthViewModelTests: XCTestCase {
         XCTAssertEqual(vm.authState, .notAuthenticated)
     }
 
+    func test_signOut_forceClearsLocalSessionState() {
+        let vm = AuthViewModel()
+        vm.authState = .authenticated
+        vm.userSession = nil // local mismatch state
+        vm.currentUser = User(id: "uid_99", fullname: "Alex", email: "alex@example.com")
+
+        vm.signOut()
+
+        XCTAssertNil(vm.currentUser)
+        XCTAssertNil(vm.userSession)
+        XCTAssertEqual(vm.authState, .notAuthenticated)
+    }
+
     // MARK: - Wallet Setup / Repair (ISS-066)
 
     func test_initialWalletSetupFailed_isFalse() {

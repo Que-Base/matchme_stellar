@@ -129,12 +129,15 @@ enum AuthState {
     func signOut() {
         do {
             try Auth.auth().signOut()
-            self.userSession = nil
-            self.currentUser = nil
-            self.authState = .notAuthenticated
         } catch {
+            // ISS-067a — record error message so it is not swallowed silently
+            self.errorMessage = error.localizedDescription
             print("DEBUG: failed to sign out with error \(error.localizedDescription)")
         }
+        // ISS-067b — force-clear local auth state regardless of Firebase call result to ensure consistent unauthenticated UI
+        self.userSession = nil
+        self.currentUser = nil
+        self.authState = .notAuthenticated
     }
 
     func deleteAccount() async throws {
