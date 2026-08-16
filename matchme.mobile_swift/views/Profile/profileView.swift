@@ -14,7 +14,13 @@ struct ProfileView: View {
 
     @Environment(AuthViewModel.self) private var authViewModel
 
-    let cuddleFeature: [String] = ["Feature_1 name", "Feature_2 name"]
+    let cuddleFeatures: [String] = [
+        "Unlimited Likes & Swipes",
+        "Earn MATCH Tokens on Daily Activity",
+        "Priority Profile Highlighting",
+        "Direct Messaging & Instant Chats",
+        "Stellar Blockchain Rewards"
+    ]
 
     /// ISS-012a/b — build ProfileViewModel from the real signed-in user.
     /// Falls back to the mock model if currentUser is nil (e.g. in previews).
@@ -44,7 +50,7 @@ struct ProfileView: View {
                     HStack(alignment: .bottom) {
                         Button(action: { activeTab1 = true }) {
                             VStack {
-                                Text("Tab 1")
+                                Text("About")
                                     .cuddleFont(
                                         size: 14,
                                         weight: activeTab1
@@ -67,7 +73,7 @@ struct ProfileView: View {
 
                         Button(action: { activeTab1 = false }) {
                             VStack {
-                                Text("Tab 2")
+                                Text("Premium Perks")
                                     .cuddleFont(
                                         size: 14,
                                         weight: !activeTab1
@@ -98,7 +104,7 @@ struct ProfileView: View {
 
                     if activeTab1 {
                         VStack {
-                          ProfileBio(bio: userProfile.bio)
+                            ProfileBio(bio: userProfile.bio)
                                 .padding(.bottom, 16)
 
                             CuddleInterestView()
@@ -113,13 +119,13 @@ struct ProfileView: View {
                         ProfileTabView(spacing: 20)
 
                         LazyVStack(alignment: .leading) {
-                            Text("Bio")
+                            Text("Membership Benefits")
                                 .cuddleFont(.Athletics, size: 18, weight: .bold)
                                 .lineSpacing(24)
                                 .padding(.bottom, 8)
 
-                            ForEach(cuddleFeature, id: \.self) { index in
-                                CuddleFeatures(featureName: index)
+                            ForEach(cuddleFeatures, id: \.self) { feature in
+                                CuddleFeatures(featureName: feature)
                             }
                         }.padding(.horizontal, 24)
                     }
