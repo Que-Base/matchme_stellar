@@ -11,6 +11,10 @@
 import SwiftUI
 import SwiftfulRouting
 
+// MARK: - Legal URLs (ISS-062)
+private let termsURL   = URL(string: "https://matchme.app/terms")!
+private let privacyURL = URL(string: "https://matchme.app/privacy")!
+
 struct SettingsView: View {
 
     let router: AnyRouter
@@ -19,6 +23,8 @@ struct SettingsView: View {
 
     // MARK: - Local state
 
+    /// ISS-062 — tracks which legal URL to open in the in-app browser
+    @State private var activeURL: URL? = nil
     /// Controls the sign-out confirmation alert
     @State private var showSignOutAlert = false
     /// Controls the delete account confirmation alert
@@ -88,14 +94,14 @@ struct SettingsView: View {
                 // MARK: Legal
                 Section("Legal") {
 
-                    // ISS-011g — Terms of Service
+                    // ISS-011g / ISS-062 — Terms of Service
                     SettingsRow(icon: "doc.text", label: "Terms of Service") {
-                        // TODO: open URL in SafariView (ISS-044)
+                        activeURL = termsURL
                     }
 
-                    // ISS-011g — Privacy Policy
+                    // ISS-011g / ISS-062 — Privacy Policy
                     SettingsRow(icon: "hand.raised", label: "Privacy Policy") {
-                        // TODO: open URL in SafariView (ISS-044)
+                        activeURL = privacyURL
                     }
 
                     // ISS-011g — App version
@@ -193,6 +199,12 @@ struct SettingsView: View {
                 Button("OK", role: .cancel) {}
             } message: {
                 Text(walletRepairError ?? "An error occurred while creating your Stellar wallet. Please try again.")
+            }
+
+            // MARK: In-app browser for Terms / Privacy (ISS-062)
+            .sheet(item: $activeURL) { url in
+                SafariView(url: url)
+                    .ignoresSafeArea()
             }
         }
         .padding(.horizontal, 0)
